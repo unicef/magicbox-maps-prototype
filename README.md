@@ -2,16 +2,17 @@
 
 ## Developing
 To get started:
-1. Clone this repo and check out the `2.0_dev` branch.
+1. Fork the project to your GitHub account and clone it.
 2. Copy `.env.local.sample` to `.env.local`.
   - The school data included in this file is a small, "fake" data set for development use. To use the full data set, change the `REACT_APP_SCHOOLS_URL` variable in .env.
 3. Run `npm install; npm start`.
+4. Create feature branch. When done create pull request to development branch of this repository.
 
 For more information on getting started, see the  [create-react-app guide](https://github.com/facebookincubator/create-react-app/blob/master/packages/react-scripts/template/README.md).
 
 ## Git Workflow
 
-We are using the `2.0_dev` branch as the main development branch for work on Magic Box Maps 2.0. Our development environment is deployed from this branch. Feature branches can be branched from `2.0_dev` and merged back up when ready.
+We are using the `development` branch as the main development branch for work on Magic Box Maps 2.0. Our development environment is deployed from this branch. Feature branches can be branched from `development` and merged back up when ready.
 
 ## Data
 
