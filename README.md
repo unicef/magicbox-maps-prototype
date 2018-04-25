@@ -1,5 +1,5 @@
 # Magic Box Maps 2.0
-
+![screenshot](./public/prototype-screenshot.png)
 ## Developing
 To get started:
 1. Fork the project to your GitHub account and clone it.
