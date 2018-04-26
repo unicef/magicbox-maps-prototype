@@ -9,6 +9,8 @@ To get started:
 4. Pick an [issue](https://github.com/unicef/magicbox-maps-prototype/issues). To get more context about a requested feature, leave a comment in the issue, or come chat with us in our [gitter channel](https://gitter.im/unicef-innovation-dev/Lobby).
 5. Create feature branch. When done create pull request to development branch of this repository.
 
+[Here](https://github.com/unicef/magicbox/blob/master/.github/CONTRIBUTING.md) is a contribution guide to Magic Box repositories.
+
 For more information on getting started, see the  [create-react-app guide](https://github.com/facebookincubator/create-react-app/blob/master/packages/react-scripts/template/README.md).
 
 ## Git Workflow
