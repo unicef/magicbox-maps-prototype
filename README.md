@@ -1,4 +1,12 @@
 # Magic Box Maps 2.0
+This application is designed to suggest schools and regions most in need of infrastructure and planning for disaster prevention and response. It is the product of an 8 week collaboration between UNICEF Innovation and Red Hat Innovation Labs. It is still a prototype. 
+
+It visualizes:
+- schools as clickable data points colored by their level of connectivity to the internet
+- regions as polygons colored by various population and various risk indicators
+
+To help us generate and display new insights, follow the guide below to pick up new tasks and communicate with UNICEF developers.
+
 ![screenshot](./public/prototype-screenshot.png)
 ## Developing
 To get started:
@@ -19,7 +27,7 @@ We are using the `development` branch as the main development branch for work on
 
 ## Data
 
-The `public/data/schools.json` file includes a small set of "fake" data. The [full data set](https://github.com/unicef/magicbox-data/blob/master/data/schools.json) is available in the private magicbox-data repo.
+The `public/data/schools.json` file does not contain real school as that may be considered sensitive data. Instead, we use a collection of around 60k points of interest located around Colombia.. The [full data set](https://github.com/unicef/magicbox-data/blob/master/data/schools.json) is available in the private magicbox-data repo.
 
 ## Docker
 
