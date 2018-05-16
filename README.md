@@ -1,9 +1,13 @@
 # Magic Box Maps 2.0
-This application is designed to suggest schools and regions most in need of infrastructure and planning for disaster prevention and response. It is the product of an 8 week collaboration between UNICEF Innovation and Red Hat Innovation Labs. It is still a prototype. 
+This application is designed to suggest schools and regions most in need of infrastructure and planning for disaster prevention and response. It is the product of an 8 week collaboration between UNICEF Innovation and Red Hat Innovation Labs. It is still a prototype.
 
-It visualizes:
+This short video provides more detail [![IMAGE ALT TEXT HERE](https://i.ytimg.com/vi/-F8ODbOv8j4/maxresdefault.jpg)](http://www.youtube.com/watch?v=F8ODbOv8j4)
+
+The app visualizes:
 - schools as clickable data points colored by their level of connectivity to the internet
 - regions as polygons colored by various population and various risk indicators
+
+
 
 To help us generate and display new insights, follow the guide below to pick up new tasks and communicate with UNICEF developers.
 
@@ -27,7 +31,9 @@ We are using the `development` branch as the main development branch for work on
 
 ## Data
 
-The `public/data/schools.json` file does not contain real school as that may be considered sensitive data. Instead, we use a collection of around 60k points of interest located around Colombia.. The [full data set](https://github.com/unicef/magicbox-data/blob/master/data/schools.json) is available in the private magicbox-data repo.
+The `public/data/schools.json` file does not contain real schools as that may be sensitive information. Instead, we use a collection of around 60k points of interest located around Colombia.. The [full data set](https://github.com/unicef/magicbox-data/blob/master/data/schools.json) is available in the private magicbox-data repo.
+
+Warning: While we believe the population and human development index is accurate, the violence and natural disaster data is not, and we are working to improve the quality.
 
 ## Docker
 
