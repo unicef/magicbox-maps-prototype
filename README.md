@@ -1,7 +1,8 @@
 # Magic Box Maps 2.0
 
 ## Developing
-To get started:
+
+Get started:
 1. Clone this repo and check out the `2.0_dev` branch.
 2. Copy `.env.local.sample` to `.env.local`.
   - The school data included in this file is a small, "fake" data set for development use. To use the full data set, change the `REACT_APP_SCHOOLS_URL` variable in .env.
