@@ -297,7 +297,7 @@ class App extends Component {
                 label: 'Population' }
             ]} onChange={this.changeRegionPaintPropertyHandler.bind(this)} />
           </Section>
-          <Section title="School capabilities">
+          <Section title="School Capabilities">
             <InputGroup type="checkbox" name="school" group={[
               { value: 'schools',
                 label: 'Connectivity',
