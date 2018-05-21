@@ -58,7 +58,8 @@ class App extends Component {
     });
 
     this.setState({map});
-
+    console.log('***')
+    console.log(apiConfig);
     // Promises
     let shapesPromise  = fetch(apiConfig.shapes).then((response) => response.json())
     let schoolsPromise = fetch(apiConfig.schools).then((response) => response.json())
@@ -297,7 +298,7 @@ class App extends Component {
                 label: 'Population' }
             ]} onChange={this.changeRegionPaintPropertyHandler.bind(this)} />
           </Section>
-          <Section title="School capabilities">
+          <Section title="School Capabilities">
             <InputGroup type="checkbox" name="school" group={[
               { value: 'schools',
                 label: 'Connectivity',
