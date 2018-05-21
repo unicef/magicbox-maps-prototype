@@ -1,13 +1,30 @@
 # Magic Box Maps 2.0
+This application is designed to suggest schools and regions most in need of infrastructure and planning for disaster prevention and response. It is the product of an 8 week collaboration between UNICEF Innovation and Red Hat Innovation Labs. It is still a prototype.
+
+This short video provides more detail [![IMAGE ALT TEXT HERE](https://i.ytimg.com/vi/-F8ODbOv8j4/maxresdefault.jpg)](http://www.youtube.com/watch?v=-F8ODbOv8j4)
+
+The app visualizes:
+- schools as clickable data points colored by their level of connectivity to the internet
+- regions as polygons colored by various population and various risk indicators
+
+
+
+To help us generate and display new insights, follow the guide below to pick up new tasks and communicate with UNICEF developers.
+
 ![screenshot](./public/prototype-screenshot.png)
 ## Developing
-To get started:
+Get started:
 1. Fork the project to your GitHub account and clone it.
 2. Copy `.env.local.sample` to `.env.local`.
   - The school data included in this file is a small, "fake" data set for development use. To use the full data set (If you have permission to access it), change the `REACT_APP_SCHOOLS_URL` variable in .env.
 3. Run `npm install; npm start`.
 4. Pick an [issue](https://github.com/unicef/magicbox-maps-prototype/issues). To get more context about a requested feature, leave a comment in the issue, or come chat with us in our [gitter channel](https://gitter.im/unicef-innovation-dev/Lobby).
 5. Create feature branch. When done create pull request to development branch of this repository.
+<<<<<<< HEAD
+=======
+
+[Here](https://github.com/unicef/magicbox/blob/master/.github/CONTRIBUTING.md) is a contribution guide to Magic Box repositories.
+>>>>>>> development
 
 For more information on getting started, see the  [create-react-app guide](https://github.com/facebookincubator/create-react-app/blob/master/packages/react-scripts/template/README.md).
 
@@ -17,7 +34,9 @@ We are using the `development` branch as the main development branch for work on
 
 ## Data
 
-The `public/data/schools.json` file includes a small set of "fake" data. The [full data set](https://github.com/unicef/magicbox-data/blob/master/data/schools.json) is available in the private magicbox-data repo.
+The `public/data/schools.json` file does not contain real schools as that may be sensitive information. Instead, we use a collection of around 60k points of interest located around Colombia.. The [full data set](https://github.com/unicef/magicbox-data/blob/master/data/schools.json) is available in the private magicbox-data repo.
+
+Warning: While we believe the population and human development index is accurate, the violence and natural disaster data is not, and we are working to improve the quality.
 
 ## Docker
 
