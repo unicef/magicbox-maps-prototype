@@ -58,7 +58,7 @@ class App extends Component {
     });
 
     this.setState({map});
-    console.log('!!!!')
+    console.log('***')
     console.log(apiConfig);
     // Promises
     let shapesPromise  = fetch(apiConfig.shapes).then((response) => response.json())
