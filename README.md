@@ -26,6 +26,8 @@ Get started:
 [Here](https://github.com/unicef/magicbox/blob/master/.github/CONTRIBUTING.md) is a contribution guide to Magic Box repositories.
 >>>>>>> development
 
+[Here](https://github.com/unicef/magicbox/blob/master/.github/CONTRIBUTING.md) is a contribution guide to Magic Box repositories.
+
 For more information on getting started, see the  [create-react-app guide](https://github.com/facebookincubator/create-react-app/blob/master/packages/react-scripts/template/README.md).
 
 ## Git Workflow
