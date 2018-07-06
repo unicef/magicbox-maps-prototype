@@ -95,6 +95,9 @@ class App extends Component {
       myJson.features = calculate_index(
         myJson.features, 'violence', 'violence_index'
       )
+      myJson.features = calculate_index(
+        myJson.features, 'activity', 'activity_index'
+      )
 
       return myJson
     })
@@ -282,7 +285,15 @@ class App extends Component {
             this.state.map.setFilter('regions', regionFilter)
             this.state.map.setFilter('schools', schoolFilter)
           }} filterOptions={this.state.filter} options={this.state.options} arrowRenderer={() => <i className="fas fa-search" />} />
-          <Section title="Region threats">
+          <Section title="Region mobility">
+            <InputGroup type="checkbox" name="region" group={[
+              { value: 'activity_index',
+                label: 'Daily Activity Index'}
+            ]}
+            onChange={this.changeRegionPaintPropertyHandler.bind(this)}
+            />
+          </Section>
+          {/* <Section title="Region threats">
             <InputGroup type="checkbox" name="region" group={[
               { value: 'threats_index',
                 label: 'Natural Disasters Index' },
@@ -297,7 +308,7 @@ class App extends Component {
               { value: 'pop',
                 label: 'Population' }
             ]} onChange={this.changeRegionPaintPropertyHandler.bind(this)} />
-          </Section>
+          </Section> */}
           <Section title="School Capabilities">
             <InputGroup type="checkbox" name="school" group={[
               { value: 'schools',
@@ -312,7 +323,7 @@ class App extends Component {
             <ConnectivityChart totals={this.state.connectivityTotals}></ConnectivityChart>
           </Section>
         </ControlPanel>
-        <Legend from={mapColors.higher} to={mapColors.lower} steps={10} leftText="Most Risk" rightText="Least Risk" />
+        <Legend from={mapColors.higher} to={mapColors.lower} steps={10} leftText="More" rightText="Less" />
       </div>
     );
   }
