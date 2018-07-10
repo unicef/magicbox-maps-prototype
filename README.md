@@ -26,11 +26,6 @@ Get started:
 3. Run `npm install; npm start`.
 4. Pick an [issue](https://github.com/unicef/magicbox-maps-prototype/issues). To get more context about a requested feature, leave a comment in the issue, or come chat with us in our [gitter channel](https://gitter.im/unicef-innovation-dev/Lobby).
 5. Create feature branch. When done create pull request to development branch of this repository.
-<<<<<<< HEAD
-=======
-
-[Here](https://github.com/unicef/magicbox/blob/master/.github/CONTRIBUTING.md) is a contribution guide to Magic Box repositories.
->>>>>>> development
 
 [Here](https://github.com/unicef/magicbox/blob/master/.github/CONTRIBUTING.md) is a contribution guide to Magic Box repositories.
 
