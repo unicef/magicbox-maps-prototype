@@ -2,6 +2,8 @@
 
 [![Chat on Gitter](https://badges.gitter.im/unicef-innovation-dev/Lobby.png)](https://gitter.im/unicef-innovation-dev/Lobby)
 [![Build Status](https://travis-ci.com/unicef/magicbox-maps-prototype.svg?branch=master)](https://travis-ci.com/unicef/magicbox-maps-prototype)
+[![Maintainability](https://api.codeclimate.com/v1/badges/7dab7a5070c67de50551/maintainability)](https://codeclimate.com/github/unicef/magicbox-maps-prototype/maintainability)
+[![Test Coverage](https://api.codeclimate.com/v1/badges/7dab7a5070c67de50551/test_coverage)](https://codeclimate.com/github/unicef/magicbox-maps-prototype/test_coverage)
 
 This application is designed to suggest schools and regions most in need of infrastructure and planning for disaster prevention and response. It is the product of an 8 week collaboration between UNICEF Innovation and Red Hat Innovation Labs. It is still a prototype.
 
