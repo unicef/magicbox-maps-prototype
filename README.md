@@ -1,4 +1,8 @@
 # Magic Box Maps 2.0
+
+[![Chat on Gitter](https://badges.gitter.im/unicef-innovation-dev/Lobby.png)](https://gitter.im/unicef-innovation-dev/Lobby)
+[![Build Status](https://travis-ci.com/unicef/magicbox-maps-prototype.svg?branch=master)](https://travis-ci.com/unicef/magicbox-maps-prototype)
+
 This application is designed to suggest schools and regions most in need of infrastructure and planning for disaster prevention and response. It is the product of an 8 week collaboration between UNICEF Innovation and Red Hat Innovation Labs. It is still a prototype.
 
 This short video provides more detail [![IMAGE ALT TEXT HERE](https://i.ytimg.com/vi/-F8ODbOv8j4/maxresdefault.jpg)](http://www.youtube.com/watch?v=-F8ODbOv8j4)
