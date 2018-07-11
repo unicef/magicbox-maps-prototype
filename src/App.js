@@ -30,9 +30,9 @@ const mapColors = {
   // lower color will be shown where indexes are 0
   lower: '#DCDCDC'
 }
-
-mapboxgl.accessToken = 'pk.eyJ1IjoibWlrZWZhYiIsImEiOiJkZmFhZDk1NGY3NGI0YmMwYjY5MDAxOTc2NDgzZTFlYSJ9.0c7IlQVZdg9b8kAAu1xKzw'
-console.log('testito')
+console.log('____')
+console.log(apiConfig)
+mapboxgl.accessToken = apiConfig.accessToken
 console.log(mapboxgl.accessToken, 'token')
 
 class App extends Component {
