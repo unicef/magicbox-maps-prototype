@@ -31,7 +31,7 @@ const mapColors = {
   lower: '#DCDCDC'
 }
 
-mapboxgl.api = apiConfig.accessToken
+mapboxgl.accessToken = apiConfig.accessToken
 class App extends Component {
   constructor(props: Props) {
     super(props);
