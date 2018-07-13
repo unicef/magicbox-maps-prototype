@@ -1,0 +1,10 @@
+plugins:
+  eslint:
+    enabled: true
+    channel: "eslint-4" # set Eslint to channel 4 aka ESLint v4.15.0 as listed here: https://docs.codeclimate.com/docs/eslint
+    config:
+      extensions:
+      - .js
+      - .jsx # specify this because by default, the ESLint engine only analyzes .js files
+  nodesecurity:
+    enabled: true
