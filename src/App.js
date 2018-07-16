@@ -85,29 +85,24 @@ class App extends Component {
       // Mobility arrives in a two dimensional array
       // where first array is colomn names [origin, destination, person, journey]
       // and each following array is a mobility [col_0_1_2-santibanko, col_0_1_3-santiblanko, 32]
-      let matrix = mobility.reduce((ary, row, i) => {
+
+      let ary = new Array(hw);
+      for (var outer = 0 ; outer < hw ; outer++){
+        ary[outer] = new Array(hw);
+        ary[outer].fill(0);
+      }
+
         // Create a new array of size 1122 when a new admin is found. This array can be considered as a new row
         //that is created everytime a origin id is found in the csv file. Later all the destination ID are
         // filled in for that row.
-        if (Array.isArray(ary[lookup[row.id_origin]])) {
-          if (lookup[row.id_destination]) {
-            ary[lookup[row.id_origin]][lookup[row.id_destination]] =
-            parseInt(row.people)
-          } else{
-            ary[lookup[row.id_origin]][lookup[row.id_destination]] = 0
-          }
-        } else {
-          ary[lookup[row.id_origin]] = new Array(hw);
-          ary[lookup[row.id_origin]].fill(0);
-          ary[lookup[row.id_origin]][lookup[row.id_destination]] =
-          parseInt(row.people)
+        for (var index = 0 ; index < mobility.length; index ++){
+          let row = mobility[index];
+          ary[lookup[row.id_origin]][lookup[row.id_destination]] = parseInt(row.people)
 
         }
 
-        return ary
-      }, Array(hw))
-      return matrix
-    }
+    return ary
+  }
 
     function get_diagonal(matrix) {
       let mmm = matrix.reduce((a, e, i) => {
@@ -259,13 +254,11 @@ class App extends Component {
         let row_index = this.state.admin_index[selected_admin]
         console.log(row_index)
         let row = []
+        console.dir(this.state.matrix)
         for (var col_index = 0; col_index < Object.keys(this.state.admin_index).length; col_index++ ){
-            if (this.state.matrix[row_index][col_index]) {
-              row[col_index] = this.state.matrix[row_index][col_index]
-            } else {
-              row[col_index] = 0
-            }
+              row[col_index] = this.state.matrix[row_index][col_index];
         }
+
 
         let max = null
 
@@ -286,6 +279,7 @@ class App extends Component {
             f.properties.mobility_value = row[i] * 4 / max
           }
         })
+
 
         this.state.map.getSource('regions').setData(this.state.geojson)
         let atts_to_aggregate = []
