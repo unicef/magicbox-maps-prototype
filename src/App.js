@@ -15,9 +15,10 @@ import Section from './components/section';
 import InputGroup from './components/input-group';
 import Legend from './components/legend';
 import ConnectivityChart from './components/connectivity-chart';
-
 // Helpers
 import {calculate_index} from './helpers/helper-index-scores';
+import {diagonal_activity} from './helpers/helper-index-scores';
+
 import apiConfig from './helpers/api-config';
 import countConnectivity from './helpers/count-connectivity';
 
@@ -31,8 +32,8 @@ const mapColors = {
   lower: '#DCDCDC'
 }
 
-mapboxgl.api = apiConfig.accessToken
-alert(mapboxgl.api)
+mapboxgl.accessToken = apiConfig.accessToken
+console.log(apiConfig)
 class App extends Component {
   constructor(props: Props) {
     super(props);
@@ -45,7 +46,10 @@ class App extends Component {
       options: [],
       searchValue: '',
       schools: {},
-      regions: {}
+      regions: {},
+      admin_index : {},
+      matrix : [],
+      geojson:{}
     };
   }
 
@@ -73,10 +77,92 @@ class App extends Component {
       })
     })
 
+    function getMatrix(mobility, lookup) {
+      //console.log(JSON.stringify(mobility))
+      // hw is for height and width of matrix, i.e. the number of geo features high and wide
+      let hw = Object.keys(lookup).length;
+      console.log('hw', hw)
+      // Mobility arrives in a two dimensional array
+      // where first array is colomn names [origin, destination, person, journey]
+      // and each following array is a mobility [col_0_1_2-santibanko, col_0_1_3-santiblanko, 32]
+      let matrix = mobility.reduce((ary, row, i) => {
+        // Create a new array of size 1122 when a new admin is found. This array can be considered as a new row
+        //that is created everytime a origin id is found in the csv file. Later all the destination ID are
+        // filled in for that row.
+        if (Array.isArray(ary[lookup[row.id_origin]])) {
+          if (lookup[row.id_destination]) {
+            ary[lookup[row.id_origin]][lookup[row.id_destination]] =
+            parseInt(row.people)
+          } else{
+            ary[lookup[row.id_origin]][lookup[row.id_destination]] = 0
+          }
+        } else {
+          ary[lookup[row.id_origin]] = new Array(hw);
+          ary[lookup[row.id_origin]].fill(0);
+          ary[lookup[row.id_origin]][lookup[row.id_destination]] =
+          parseInt(row.people)
+
+        }
+
+        return ary
+      }, Array(hw))
+      return matrix
+    }
+
+    function get_diagonal(matrix) {
+      let mmm = matrix.reduce((a, e, i) => {
+      a[i] = matrix[i][i] || 0
+    // console.log(a.length,i, matrix[i][i], '****')
+      return a
+      }, []);
+      return mmm
+    }
+
+    console.log(apiConfig.mobility)
+    let mobilityPromise = fetch(apiConfig.mobility).then((response) => response.json())
+    let admin_index = null;
+    let mobility = []
     // Set data for regions when regions and map are available
-    Promise.all([shapesPromise, mapLoadPromise]).then(([geojson, map]) => {
+    Promise.all([shapesPromise, mapLoadPromise, mobilityPromise]).then(([geojson, map, mobility]) => {
+      //GeoJon file is read line by line and all admin are assigned an index
+      //One potential problem: If geoJSON WCOLGEN02_ id are different from MOBILITY file admin
+      //Here WCOLGEN02_ for admin 2 is 0 and is col_0_44_2_santiblanko the first row in the CSV file
+      let admin_index = geojson.features.reduce((h, f, i) => {
+        h[f.properties.admin_id] = i;
+        return h;
+      }, {});
+
+      let matrix = getMatrix( mobility , admin_index);
+      console.log('matrix')
+      console.log(matrix)
+      let diagonal = get_diagonal(matrix);
+      let max = null
+      diagonal.forEach((ele , i) =>{
+        if(i == 0){
+          max = ele
+        }
+        else if( ele > max){
+          max = ele
+        }
+      })
+
+      geojson.features.forEach((f, i) =>{
+        if(diagonal[i] >= max/4){
+          f.properties.activity_index = diagonal[i]/max || 0
+        } else{
+          f.properties.activity_index = (diagonal[i] * 4 ) / max || 0
+        }
+      })
+
+      this.setState({matrix : matrix ,
+        admin_index : admin_index,
+        geojson: geojson});
+
+      console.log(geojson)
       map.getSource('regions').setData(geojson)
     })
+
+
 
     // Set data for schools when regions and map are available
     Promise.all([schoolsPromise, mapLoadPromise]).then(([geojson, map]) => {
@@ -84,23 +170,7 @@ class App extends Component {
     })
 
     // Handle shapes data
-    shapesPromise.then(function(myJson) {
-      // Calculate indexes
-      myJson.features = calculate_index(
-        myJson.features, 'population', 'pop'
-      )
-      myJson.features = calculate_index(
-        myJson.features, 'threats', 'threats_index'
-      )
-      myJson.features = calculate_index(
-        myJson.features, 'violence', 'violence_index'
-      )
-      myJson.features = calculate_index(
-        myJson.features, 'activity', 'activity_index'
-      )
 
-      return myJson
-    })
 
     // Handle school data
     schoolsPromise.then((geojson) => {
@@ -183,6 +253,61 @@ class App extends Component {
         }
       });
 
+      map.on('click', 'regions', (e) => {
+        console.log('Clicked On Admin Number' )
+        console.dir(e.features[0].properties.WCOLGEN02_)
+        let row_index = e.features[0].properties.WCOLGEN02_;
+        console.log(row_index)
+        let row = []
+        for (var col_index = 0; col_index < Object.keys(this.state.admin_index).length; col_index++ ){
+            console.log('Row Index');
+            console.log(this.state.matrix[row_index]);
+            console.log(this.state.matrix[row_index][col_index])
+            row[col_index] = this.state.matrix[row_index][col_index] || 0
+        }
+
+        let max = null
+
+        row.forEach((ele , i) =>{
+          if(i == 0){
+            max = ele
+          }
+          else if( ele > max){
+            max = ele
+          }
+        })
+        //index : col 1, col2 , .....
+
+        this.state.geojson.features.forEach((f, i) =>{
+          if(row[i] >= max/4){
+            f.properties.mobility_value = row[i]/max
+          } else{
+            f.properties.mobility_value = row[i] * 4 / max
+          }
+        })
+
+        this.state.map.getSource('regions').setData(this.state.geojson)
+        let atts_to_aggregate = []
+        atts_to_aggregate.push("+")
+        let query = []
+        query.push("get")
+        query.push("mobility_value")
+        atts_to_aggregate.push(query)
+
+        this.state.map.setPaintProperty(
+          'regions',
+          'fill-color',
+          // linear interpolation for colors going from lowerColor to higherColor accordingly to aggregation value
+          ['interpolate',
+            ['linear'],
+            ['/', atts_to_aggregate, atts_to_aggregate.length-1],
+            0, mapColors.lower,
+            1, mapColors.higher
+          ]
+        )
+
+      })
+
       // Add click event to schools layer
       map.on('click', 'schools', (e) => {
         let coordinates = e.features[0].geometry.coordinates.slice()
@@ -206,7 +331,15 @@ class App extends Component {
       map.on('mouseleave', 'schools', (e) => {
         map.getCanvas().style.cursor = ''
       })
-    });
+
+    map.on('mouseenter', 'regions', (e) => {
+      map.getCanvas().style.cursor = 'pointer'
+    })
+
+    map.on('mouseleave', 'regions', (e) => {
+      map.getCanvas().style.cursor = ''
+    })
+  }.bind(this));
   }
 
   displayLayerHandler(e) {
@@ -221,8 +354,13 @@ class App extends Component {
 
   changeRegionPaintPropertyHandler(e) {
     // Get all checked inputs for regions
+    // let gjson = this.state.gjson
+    // gjson.features.forEach(f => {
+    //   f.properties.activity_index = Math.random()
+    // })
+    // this.state.map.getSource('regions').setData(gjson)
     let matches = document.querySelectorAll("input[name=region]:checked");
-
+    console.dir( matches)
     // Change layer visibility if there are matches
     this.state.map.setLayoutProperty('regions', 'visibility', matches.length ? 'visible' : 'none')
 
@@ -237,13 +375,14 @@ class App extends Component {
       return a
     }, ['+'])
 
+    console.log('atts_to_aggregate' + JSON.stringify(atts_to_aggregate))
     // Set new paint property to color the map
     this.state.map.setPaintProperty(
       'regions',
       'fill-color',
       // linear interpolation for colors going from lowerColor to higherColor accordingly to aggregation value
       ['interpolate',
-        ['linear'],
+        ['exponential' , 1/10],
         ['/', atts_to_aggregate, atts_to_aggregate.length-1],
         0, mapColors.lower,
         1, mapColors.higher
