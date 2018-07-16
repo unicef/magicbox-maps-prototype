@@ -255,15 +255,16 @@ class App extends Component {
 
       map.on('click', 'regions', (e) => {
         console.log('Clicked On Admin Number' )
-        console.dir(e.features[0].properties.WCOLGEN02_)
-        let row_index = e.features[0].properties.WCOLGEN02_;
+        let selected_admin = e.features[0].properties.admin_id;
+        let row_index = this.state.admin_index[selected_admin]
         console.log(row_index)
         let row = []
         for (var col_index = 0; col_index < Object.keys(this.state.admin_index).length; col_index++ ){
-            console.log('Row Index');
-            console.log(this.state.matrix[row_index]);
-            console.log(this.state.matrix[row_index][col_index])
-            row[col_index] = this.state.matrix[row_index][col_index] || 0
+            if (this.state.matrix[row_index][col_index]) {
+              row[col_index] = this.state.matrix[row_index][col_index]
+            } else {
+              row[col_index] = 0
+            }
         }
 
         let max = null
