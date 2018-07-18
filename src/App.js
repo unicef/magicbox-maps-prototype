@@ -33,7 +33,6 @@ const mapColors = {
 }
 
 mapboxgl.accessToken = apiConfig.accessToken
-console.log(apiConfig)
 class App extends Component {
   constructor(props: Props) {
     super(props);
@@ -42,7 +41,7 @@ class App extends Component {
       lng: -74.2973,
       lat: 4.5709,
       zoom: 4.5,
-      connectivityTotals: null,
+      connectivity_totals: null,
       options: [],
       searchValue: '',
       schools: {},
@@ -62,11 +61,11 @@ class App extends Component {
     });
 
     this.setState({map});
-    console.log('***')
-    console.log(apiConfig);
     // Promises
-    let shapesPromise  = fetch(apiConfig.shapes).then((response) => response.json())
-    let schoolsPromise = fetch(apiConfig.schools).then((response) => response.json())
+    console.log('apiConfig: ', apiConfig)
+    let shapesPromise  = fetch(apiConfig.shapes).then((resp) => resp.json())
+    let schoolsPromise = fetch(apiConfig.schools).then((resp) => resp.json())
+    let mobilityPromise = fetch(apiConfig.mobility).then((resp) => resp.json())
     let mapLoadPromise = new Promise((resolve, reject) => {
       map.on('load', (e) => {
         resolve(map)
@@ -78,105 +77,98 @@ class App extends Component {
     })
 
     function getMatrix(mobility, lookup) {
-      //console.log(JSON.stringify(mobility))
       // hw is for height and width of matrix, i.e. the number of geo features high and wide
       let hw = Object.keys(lookup).length;
       console.log('hw', hw)
-      // Mobility arrives in a two dimensional array
-      // where first array is colomn names [origin, destination, person, journey]
-      // and each following array is a mobility [col_0_1_2-santibanko, col_0_1_3-santiblanko, 32]
-
+      /* Mobility arrives in a two dimensional array where first array is colomn names [origin, destination, person] and each following array is a mobility [col_0_1_2-santibanko, col_0_1_3-santiblanko, 32]
+      */
       let ary = new Array(hw);
       for (var outer = 0 ; outer < hw ; outer++){
         ary[outer] = new Array(hw);
         ary[outer].fill(0);
       }
 
-        // Create a new array of size 1122 when a new admin is found. This array can be considered as a new row
-        //that is created everytime a origin id is found in the csv file. Later all the destination ID are
-        // filled in for that row.
-        for (var index = 0 ; index < mobility.length; index ++){
-          let row = mobility[index];
-          ary[lookup[row.id_origin]][lookup[row.id_destination]] = parseInt(row.people)
+      /* Create a new array of size 1122 when a new admin is found. This array can be considered as a new row that is created everytime a origin id is found in the csv file. Later all the destination ID are filled in for that row.
+      */
+      for (var index = 0 ; index < mobility.length; index ++){
+        let row = mobility[index];
+        ary[lookup[row.id_origin]][lookup[row.id_destination]] = parseInt(row.people)
+      }
 
-        }
+      return ary
+    }
 
-    return ary
-  }
-
-    function get_diagonal(matrix) {
+    function getDiagonal(matrix) {
       let mmm = matrix.reduce((a, e, i) => {
-      a[i] = matrix[i][i] || 0
-    // console.log(a.length,i, matrix[i][i], '****')
-      return a
+        a[i] = matrix[i][i] || 0
+        // console.log(a.length,i, matrix[i][i], '****')
+        return a
       }, []);
       return mmm
     }
 
-    console.log(apiConfig.mobility)
-    let mobilityPromise = fetch(apiConfig.mobility).then((response) => response.json())
-    let admin_index = null;
+    /*
+    Values passed in here will be converted to range 0:1. In addition, values in the lowest quarter will be buffed up by 4 times.
+    */
+    function updateGeojsonWithConvertedValues(geojson, values_arr, value_type) {
+      let max = values_arr.reduce(function(a, b) {
+        return Math.max(a, b);
+      });
+      // push the converted values into the geojson file
+      geojson.features.forEach((f, i) => {
+        if (values_arr[i] >= max/4) {
+          f.properties[value_type] = values_arr[i]/max || 0
+        } else {
+          f.properties[value_type] = (4 * values_arr[i])/max || 0
+        }
+      })
+    }
+
     let mobility = []
     // Set data for regions when regions and map are available
     Promise.all([shapesPromise, mapLoadPromise, mobilityPromise]).then(([geojson, map, mobility]) => {
-      //GeoJon file is read line by line and all admin are assigned an index
-      //One potential problem: If geoJSON WCOLGEN02_ id are different from MOBILITY file admin
-      //Here WCOLGEN02_ for admin 2 is 0 and is col_0_44_2_santiblanko the first row in the CSV file
+      // GeoJon file is read line by line and all admin are assigned an index
+      // One potential problem: If geoJSON WCOLGEN02_ id are different from MOBILITY file admin
+      // Here WCOLGEN02_ for admin 2 is 0 and is col_0_44_2_santiblanko the first row in the CSV file
       let admin_index = geojson.features.reduce((h, f, i) => {
         h[f.properties.admin_id] = i;
         return h;
       }, {});
 
-      let matrix = getMatrix( mobility , admin_index);
-      console.log('matrix')
-      console.log(matrix)
-      let diagonal = get_diagonal(matrix);
-      let max = null
-      diagonal.forEach((ele , i) =>{
-        if(i == 0){
-          max = ele
-        }
-        else if( ele > max){
-          max = ele
-        }
-      })
+      let matrix = getMatrix(mobility, admin_index);
+      console.log('matrix', matrix)
+      let diagonal = getDiagonal(matrix);
 
-      geojson.features.forEach((f, i) =>{
-        if(diagonal[i] >= max/4){
-          f.properties.activity_index = diagonal[i]/max || 0
-        } else{
-          f.properties.activity_index = (diagonal[i] * 4 ) / max || 0
-        }
-      })
+      updateGeojsonWithConvertedValues(geojson, diagonal, 'activity_value')
 
-      this.setState({matrix : matrix ,
+      this.setState({
+        matrix : matrix ,
         admin_index : admin_index,
-        geojson: geojson});
+        geojson: geojson
+      });
 
-      console.log(geojson)
       map.getSource('regions').setData(geojson)
     })
 
 
-
-    // Set data for schools when regions and map are available
+    // Set data for schools when schools and map are available
     Promise.all([schoolsPromise, mapLoadPromise]).then(([geojson, map]) => {
       map.getSource('schools').setData(geojson)
     })
 
-    // Handle shapes data
+    // Handle shapes data if any
 
-
-    // Handle school data
+    // Handle school data if any
     schoolsPromise.then((geojson) => {
       this.setState({
-        connectivityTotals: countConnectivity(geojson.features)
+        connectivity_totals: countConnectivity(geojson.features)
       })
     })
 
     // When data arrives, process them in the background
     // to build a list of names for the search component
-    Promise.all([schoolsPromise, shapesPromise]).then(([schoolsGeojson, shapesGeojson]) => {
+    Promise.all([schoolsPromise, shapesPromise])
+    .then(([schoolsGeojson, shapesGeojson]) => {
       return new Promise((resolve, reject) => {
         let webWorker = new Worker('ww-process-names.js')
 
@@ -198,6 +190,7 @@ class App extends Component {
       })
     })
 
+    // Make map respond when user zooms or moves it around
     map.on('move', () => {
       const { lng, lat } = map.getCenter();
 
@@ -208,6 +201,12 @@ class App extends Component {
       });
     });
 
+    /*
+    Define map's properties when it's first loaded.
+    This includes:
+    - Adding 2 layers: 'regions' (for socio-econ metrics) & 'schools' (for school info & connectivity)
+    - Defining 'click' events for these 2 layers
+    */
     map.on('load', function(e) {
       map.addLayer({
         id: 'regions',
@@ -248,6 +247,7 @@ class App extends Component {
         }
       });
 
+      // Add click event to update the Region layer when polygons are clicked
       map.on('click', 'regions', (e) => {
         console.log('Clicked On Admin Number' )
         let selected_admin = e.features[0].properties.admin_id;
@@ -259,29 +259,12 @@ class App extends Component {
               row[col_index] = this.state.matrix[row_index][col_index];
         }
 
+        updateGeojsonWithConvertedValues(this.state.geojson, row, 'mobility_value')
 
-        let max = null
-
-        row.forEach((ele , i) =>{
-          if(i == 0){
-            max = ele
-          }
-          else if( ele > max){
-            max = ele
-          }
-        })
-        //index : col 1, col2 , .....
-
-        this.state.geojson.features.forEach((f, i) =>{
-          if(row[i] >= max/4){
-            f.properties.mobility_value = row[i]/max
-          } else{
-            f.properties.mobility_value = row[i] * 4 / max
-          }
-        })
-
-
+        // tell Map to update its data source
         this.state.map.getSource('regions').setData(this.state.geojson)
+
+        // build the aggregation query that will be used for color interpolation
         let atts_to_aggregate = []
         atts_to_aggregate.push("+")
         let query = []
@@ -300,7 +283,6 @@ class App extends Component {
             1, mapColors.higher
           ]
         )
-
       })
 
       // Add click event to schools layer
@@ -319,6 +301,14 @@ class App extends Component {
       })
 
       // Change the cursor to a pointer
+      map.on('mouseenter', 'regions', (e) => {
+        map.getCanvas().style.cursor = 'pointer'
+      })
+
+      map.on('mouseleave', 'regions', (e) => {
+        map.getCanvas().style.cursor = ''
+      })
+
       map.on('mouseenter', 'schools', (e) => {
         map.getCanvas().style.cursor = 'pointer'
       })
@@ -327,18 +317,11 @@ class App extends Component {
         map.getCanvas().style.cursor = ''
       })
 
-    map.on('mouseenter', 'regions', (e) => {
-      map.getCanvas().style.cursor = 'pointer'
-    })
-
-    map.on('mouseleave', 'regions', (e) => {
-      map.getCanvas().style.cursor = ''
-    })
-  }.bind(this));
+    }.bind(this));
   }
 
   displayLayerHandler(e) {
-    // layer name should be stored in element's value property
+    // layer name should be stored in element's 'value' property
     let layerName = e.target.getAttribute('value')
     // will be 'visible' or 'none'
     let currentState = e.target.checked ? 'visible' : 'none'
@@ -349,14 +332,9 @@ class App extends Component {
 
   changeRegionPaintPropertyHandler(e) {
     // Get all checked inputs for regions
-    // let gjson = this.state.gjson
-    // gjson.features.forEach(f => {
-    //   f.properties.activity_index = Math.random()
-    // })
-    // this.state.map.getSource('regions').setData(gjson)
     let matches = document.querySelectorAll("input[name=region]:checked");
-    console.dir( matches)
-    // Change layer visibility if there are matches
+    console.dir(matches)
+    // Make 'regions' layer visible if there are matches
     this.state.map.setLayoutProperty('regions', 'visibility', matches.length ? 'visible' : 'none')
 
     if (!matches.length) {
@@ -365,10 +343,11 @@ class App extends Component {
     }
 
     // build the aggregation query
-    let atts_to_aggregate = Array.prototype.slice.call(matches).reduce((a,t) => {
-      a.push(['get', t.value])
-      return a
-    }, ['+'])
+    let atts_to_aggregate =
+      Array.prototype.slice.call(matches).reduce((a,t) => {
+        a.push(['get', t.value])
+        return a
+      }, ['+'])
 
     console.log('atts_to_aggregate' + JSON.stringify(atts_to_aggregate))
     // Set new paint property to color the map
@@ -377,7 +356,7 @@ class App extends Component {
       'fill-color',
       // linear interpolation for colors going from lowerColor to higherColor accordingly to aggregation value
       ['interpolate',
-        ['exponential' , 1/10],
+        ['linear'],
         ['/', atts_to_aggregate, atts_to_aggregate.length-1],
         0, mapColors.lower,
         1, mapColors.higher
@@ -392,16 +371,23 @@ class App extends Component {
           <div ref={el => this.mapContainer = el} className="mainMap" />
         </div>
         <ControlPanel>
-          <Select name="search" placeholder="School or municipality" multi={true} className="search" value={this.state.searchValue} onChange={(selectedOption) => {
-            let regionFilter = null
-            let schoolFilter = null
+          <Select
+            name="search"
+            placeholder="School or municipality"
+            multi={true}
+            className="search"
+            value={this.state.searchValue}
+            onChange={(selectedOption) => {
+              let regionFilter = null
+              let schoolFilter = null
 
-            // Set current state
-            this.setState({searchValue: selectedOption})
+              // Set current state
+              this.setState({searchValue: selectedOption})
 
-            if (selectedOption.length) {
-              // Create filter for regions to look into all 'NOMBRE's
-              regionFilter = ['any'].concat(...selectedOption.map((input) => {
+              // If one of the school or municipality is selected from the dropdown list
+              if (selectedOption.length) {
+                // Create filter for regions to look into all 'NOMBRE's
+                regionFilter = ['any'].concat(...selectedOption.map((input) => {
                   return [
                     ['==', ['get', 'NOMBRE_C'], input.value],
                     ['==', ['get', 'NOMBRE_D'], input.value],
@@ -409,25 +395,34 @@ class App extends Component {
                   ]
                 }))
 
-              // Create filter for schools to look into every 'name'
-              schoolFilter = ['any'].concat(selectedOption.map((input) => {
-                return ['==', ['get', 'name'], input.value]
-              }))
-            }
+                // Create filter for schools to look into every 'name'
+                schoolFilter = ['any'].concat(selectedOption.map((input) => {
+                  return ['==', ['get', 'name'], input.value]
+                }))
+              }
 
-            // Set filters
-            this.state.map.setFilter('regions', regionFilter)
-            this.state.map.setFilter('schools', schoolFilter)
-          }} filterOptions={this.state.filter} options={this.state.options} arrowRenderer={() => <i className="fas fa-search" />} />
-          <Section title="Region mobility">
-            <InputGroup type="checkbox" name="region" group={[
-              { value: 'activity_index',
-                label: 'Daily Activity Index'}
-            ]}
-            onChange={this.changeRegionPaintPropertyHandler.bind(this)}
+              // Set filters
+              this.state.map.setFilter('regions', regionFilter)
+              this.state.map.setFilter('schools', schoolFilter)
+            }}
+            filterOptions={this.state.filter}
+            options={this.state.options}
+            arrowRenderer={() => <i className="fas fa-search" />}
+          />
+
+          <Section title="Region Mobility">
+            <InputGroup
+              type="checkbox"
+              name="region"
+              group={[
+                { value: 'activity_value',
+                  label: 'Daily Activity/Mobility Index'}
+              ]}
+              onChange={this.changeRegionPaintPropertyHandler.bind(this)}
             />
           </Section>
-          {/* <Section title="Region threats">
+
+          {/* <Section title="Region Threats">
             <InputGroup type="checkbox" name="region" group={[
               { value: 'threats_index',
                 label: 'Natural Disasters Index' },
@@ -435,7 +430,8 @@ class App extends Component {
                 label: 'Violence Index' }
             ]} onChange={this.changeRegionPaintPropertyHandler.bind(this)} />
           </Section>
-          <Section title="Region vulnerabilities">
+
+          <Section title="Region Vulnerabilities">
             <InputGroup type="checkbox" name="region" group={[
               { value: 'hdi',
                 label: 'Human Development Index' },
@@ -443,6 +439,7 @@ class App extends Component {
                 label: 'Population' }
             ]} onChange={this.changeRegionPaintPropertyHandler.bind(this)} />
           </Section> */}
+
           <Section title="School Capabilities">
             <InputGroup type="checkbox" name="school" group={[
               { value: 'schools',
@@ -452,11 +449,14 @@ class App extends Component {
               }
             ]} onChange={(e) => {}} />
           </Section>
+
           <p className="controlPanel__footerMessage">The selected items will be considered when calculating the risk level of schools and areas.</p>
+
           <Section title="Connectivity Details">
-            <ConnectivityChart totals={this.state.connectivityTotals}></ConnectivityChart>
+            <ConnectivityChart totals={this.state.connectivity_totals}></ConnectivityChart>
           </Section>
         </ControlPanel>
+
         <Legend from={mapColors.higher} to={mapColors.lower} steps={10} leftText="More" rightText="Less" />
       </div>
     );
