@@ -13,12 +13,12 @@ import createFilterOptions from 'react-select-fast-filter-options';
 import ControlPanel from './components/control-panel';
 import Section from './components/section';
 import InputGroup from './components/input-group';
+import RadioGroup from './components/day-radio-group';
 import Legend from './components/legend';
 import ConnectivityChart from './components/connectivity-chart';
-// Helpers
-import {calculate_index} from './helpers/helper-index-scores';
-import {diagonal_activity} from './helpers/helper-index-scores';
 
+// Helpers
+// import {calculate_index} from './helpers/helper-index-scores';
 import apiConfig from './helpers/api-config';
 import countConnectivity from './helpers/count-connectivity';
 
@@ -48,8 +48,58 @@ class App extends Component {
       regions: {},
       admin_index : {},
       matrix : [],
-      geojson:{}
+      geojson:{},
+      mobility_alldays: [],
+      selected_admin: '',
+      daySelectDisabled: true
     };
+  }
+
+  getMatrix(mobility, lookup) {
+    // hw is for height and width of matrix, i.e. the number of geo features high and wide
+    let hw = Object.keys(lookup).length;
+    console.log('hw', hw)
+    /* Mobility arrives in a two dimensional array where first array is colomn names [origin, destination, person] and each following array is a mobility [col_0_1_2-santibanko, col_0_1_3-santiblanko, 32]
+    */
+    let ary = new Array(hw);
+    for (var outer = 0 ; outer < hw ; outer++){
+      ary[outer] = new Array(hw);
+      ary[outer].fill(0);
+    }
+
+    /* Create a new array of size 1122 when a new admin is found. This array can be considered as a new row that is created everytime a origin id is found in the csv file. Later all the destination ID are filled in for that row.
+    */
+    for (var index = 0 ; index < mobility.length; index ++){
+      let row = mobility[index];
+      ary[lookup[row.id_origin]][lookup[row.id_destination]] = parseInt(row.people, 10)
+    }
+
+    return ary
+  }
+
+  getDiagonal(matrix) {
+    let mmm = matrix.reduce((a, e, i) => {
+      a[i] = matrix[i][i] || 0
+      return a
+    }, []);
+    return mmm
+  }
+
+  /*
+  Values passed in here will be converted to range 0:1. In addition, values in the lowest quarter will be buffed up by 4 times.
+  */
+  updateGeojsonWithConvertedValues(geojson, values_arr, value_type) {
+    let max = values_arr.reduce(function(a, b) {
+      return Math.max(a, b);
+    });
+    // push the converted values into the geojson file
+    geojson.features.forEach((f, i) => {
+      if (values_arr[i] >= max/4) {
+        f.properties[value_type] = values_arr[i]/max || 0
+      } else {
+        f.properties[value_type] = (4 * values_arr[i])/max || 0
+      }
+    })
   }
 
   componentDidMount() {
@@ -65,7 +115,20 @@ class App extends Component {
     console.log('apiConfig: ', apiConfig)
     let shapesPromise  = fetch(apiConfig.shapes).then((resp) => resp.json())
     let schoolsPromise = fetch(apiConfig.schools).then((resp) => resp.json())
-    let mobilityPromise = fetch(apiConfig.mobility).then((resp) => resp.json())
+    let mobilityMondayPromise =
+      fetch(apiConfig.mobilityMon).then((resp) => resp.json())
+    let mobilityTuesdayPromise =
+      fetch(apiConfig.mobilityTue).then((resp) => resp.json())
+    let mobilityWednesdayPromise =
+      fetch(apiConfig.mobilityWed).then((resp) => resp.json())
+    let mobilityThursdayPromise =
+      fetch(apiConfig.mobilityThu).then((resp) => resp.json())
+    let mobilityFridayPromise =
+      fetch(apiConfig.mobilityFri).then((resp) => resp.json())
+    let mobilitySaturdayPromise =
+      fetch(apiConfig.mobilitySat).then((resp) => resp.json())
+    let mobilitySundayPromise =
+      fetch(apiConfig.mobilitySun).then((resp) => resp.json())
     let mapLoadPromise = new Promise((resolve, reject) => {
       map.on('load', (e) => {
         resolve(map)
@@ -76,57 +139,18 @@ class App extends Component {
       })
     })
 
-    function getMatrix(mobility, lookup) {
-      // hw is for height and width of matrix, i.e. the number of geo features high and wide
-      let hw = Object.keys(lookup).length;
-      console.log('hw', hw)
-      /* Mobility arrives in a two dimensional array where first array is colomn names [origin, destination, person] and each following array is a mobility [col_0_1_2-santibanko, col_0_1_3-santiblanko, 32]
-      */
-      let ary = new Array(hw);
-      for (var outer = 0 ; outer < hw ; outer++){
-        ary[outer] = new Array(hw);
-        ary[outer].fill(0);
-      }
-
-      /* Create a new array of size 1122 when a new admin is found. This array can be considered as a new row that is created everytime a origin id is found in the csv file. Later all the destination ID are filled in for that row.
-      */
-      for (var index = 0 ; index < mobility.length; index ++){
-        let row = mobility[index];
-        ary[lookup[row.id_origin]][lookup[row.id_destination]] = parseInt(row.people)
-      }
-
-      return ary
-    }
-
-    function getDiagonal(matrix) {
-      let mmm = matrix.reduce((a, e, i) => {
-        a[i] = matrix[i][i] || 0
-        // console.log(a.length,i, matrix[i][i], '****')
-        return a
-      }, []);
-      return mmm
-    }
-
-    /*
-    Values passed in here will be converted to range 0:1. In addition, values in the lowest quarter will be buffed up by 4 times.
-    */
-    function updateGeojsonWithConvertedValues(geojson, values_arr, value_type) {
-      let max = values_arr.reduce(function(a, b) {
-        return Math.max(a, b);
-      });
-      // push the converted values into the geojson file
-      geojson.features.forEach((f, i) => {
-        if (values_arr[i] >= max/4) {
-          f.properties[value_type] = values_arr[i]/max || 0
-        } else {
-          f.properties[value_type] = (4 * values_arr[i])/max || 0
-        }
-      })
-    }
-
-    let mobility = []
     // Set data for regions when regions and map are available
-    Promise.all([shapesPromise, mapLoadPromise, mobilityPromise]).then(([geojson, map, mobility]) => {
+    Promise.all([
+      shapesPromise,
+      mapLoadPromise,
+      mobilityMondayPromise,
+      mobilityTuesdayPromise,
+      mobilityWednesdayPromise,
+      mobilityThursdayPromise,
+      mobilityFridayPromise,
+      mobilitySaturdayPromise,
+      mobilitySundayPromise])
+    .then(([geojson, map, mobilityMon, mobilityTue, mobilityWed, mobilityThu, mobilityFri, mobilitySat, mobilitySun]) => {
       // GeoJon file is read line by line and all admin are assigned an index
       // One potential problem: If geoJSON WCOLGEN02_ id are different from MOBILITY file admin
       // Here WCOLGEN02_ for admin 2 is 0 and is col_0_44_2_santiblanko the first row in the CSV file
@@ -135,16 +159,19 @@ class App extends Component {
         return h;
       }, {});
 
-      let matrix = getMatrix(mobility, admin_index);
-      console.log('matrix', matrix)
-      let diagonal = getDiagonal(matrix);
+      let mobility_alldays = [mobilityMon, mobilityTue, mobilityWed, mobilityThu, mobilityFri, mobilitySat, mobilitySun]
 
-      updateGeojsonWithConvertedValues(geojson, diagonal, 'activity_value')
+      // initial fetch of mobility is set to Monday as default. Monday mobility has index 0 in the array of all mobility
+      let matrix = this.getMatrix(mobility_alldays[0], admin_index);
+      let diagonal = this.getDiagonal(matrix);
+
+      this.updateGeojsonWithConvertedValues(geojson, diagonal, 'activity_value')
 
       this.setState({
-        matrix : matrix ,
-        admin_index : admin_index,
-        geojson: geojson
+        matrix: matrix,
+        admin_index: admin_index,
+        geojson: geojson,
+        mobility_alldays: mobility_alldays
       });
 
       map.getSource('regions').setData(geojson)
@@ -251,6 +278,8 @@ class App extends Component {
       map.on('click', 'regions', (e) => {
         console.log('Clicked On Admin Number' )
         let selected_admin = e.features[0].properties.admin_id;
+        this.setState({ selected_admin: selected_admin  })
+
         let row_index = this.state.admin_index[selected_admin]
         console.log(row_index)
         let row = []
@@ -259,7 +288,7 @@ class App extends Component {
               row[col_index] = this.state.matrix[row_index][col_index];
         }
 
-        updateGeojsonWithConvertedValues(this.state.geojson, row, 'mobility_value')
+        this.updateGeojsonWithConvertedValues(this.state.geojson, row, 'mobility_value')
 
         // tell Map to update its data source
         this.state.map.getSource('regions').setData(this.state.geojson)
@@ -337,20 +366,94 @@ class App extends Component {
     // Make 'regions' layer visible if there are matches
     this.state.map.setLayoutProperty('regions', 'visibility', matches.length ? 'visible' : 'none')
 
+    // no socio-econ metric selected
     if (!matches.length) {
-      // no region selected
+      // reset value of selected_admin, so that next time Daily Activity/Mobility is clicked, activity will be displayed rather than the mobility of the old selected_admin
+      // also, none clicked means Daily Activity/Mobility is not clicked either, hence disabling day selection
+      this.setState({
+        selected_admin: '',
+        daySelectDisabled: true
+      })
       return
     }
 
-    // build the aggregation query
+    // build the aggregation query; at the same time check if day selection will be enabled or not
+    let daySelectDisabled = true
     let atts_to_aggregate =
       Array.prototype.slice.call(matches).reduce((a,t) => {
+        // if Daily Activity/Mobility is checked, user can now select day
+        if (t.value === 'activity_value') {
+          daySelectDisabled = false
+        }
         a.push(['get', t.value])
         return a
       }, ['+'])
 
+    this.setState({ daySelectDisabled: daySelectDisabled  })
+
     console.log('atts_to_aggregate' + JSON.stringify(atts_to_aggregate))
     // Set new paint property to color the map
+    this.state.map.setPaintProperty(
+      'regions',
+      'fill-color',
+      // linear interpolation for colors going from lowerColor to higherColor accordingly to aggregation value
+      ['interpolate',
+        ['linear'],
+        ['/', atts_to_aggregate, atts_to_aggregate.length-1],
+        0, mapColors.lower,
+        1, mapColors.higher
+      ]
+    )
+  }
+
+  changeDayPaintPropertyHandler(e) {
+    // Get the checked input for which day of the week is selected
+    let matches = document.querySelectorAll("input[name=day]:checked");
+
+    if (!matches.length) {
+      // no day selected
+      return
+    }
+
+    // Since only 1 day can be selected at a time, we can point directly to that day
+    let day_selected = matches[0].value;
+    let index = parseInt(day_selected.slice(3), 10); // day_selected has the format 'day0', 'day1', etc.
+    let updatedMatrix =
+      this.getMatrix(this.state.mobility_alldays[index], this.state.admin_index);
+
+    let value_type = ''
+    let values = []
+
+    if (this.state.selected_admin) { // if currently in 'mobility' mode aka an admin is being selected
+      value_type = 'mobility_value'
+      let row_index = this.state.admin_index[this.state.selected_admin]
+      for (
+        var col_index = 0;
+        col_index < Object.keys(this.state.admin_index).length;
+        col_index++
+      ) {
+          values[col_index] = updatedMatrix[row_index][col_index];
+        }
+    } else { // no admin selected means currently in 'activity' mode
+      value_type = 'activity_value'
+      values = this.getDiagonal(updatedMatrix);
+    }
+
+    this.updateGeojsonWithConvertedValues(this.state.geojson, values, value_type)
+
+    // tell Map to update its data source
+    this.state.map.getSource('regions').setData(this.state.geojson)
+    this.setState({ matrix: updatedMatrix })
+
+    // build the aggregation query that will be used for color interpolation
+    let atts_to_aggregate = []
+    atts_to_aggregate.push("+")
+    let query = []
+    query.push("get")
+    query.push(value_type)
+    atts_to_aggregate.push(query)
+    console.log(day_selected + ': atts_to_aggregate' + JSON.stringify(atts_to_aggregate))
+
     this.state.map.setPaintProperty(
       'regions',
       'fill-color',
@@ -419,6 +522,29 @@ class App extends Component {
                   label: 'Daily Activity/Mobility Index'}
               ]}
               onChange={this.changeRegionPaintPropertyHandler.bind(this)}
+            />
+            <RadioGroup
+              disabled={this.state.daySelectDisabled}
+              type="radio"
+              name="day"
+              group={[
+                { value: 'day0',
+                  label: 'Monday',
+                  defaultChecked: 'checked'},
+                { value: 'day1',
+                  label: 'Tuesday'},
+                { value: 'day2',
+                  label: 'Wednesday'},
+                { value: 'day3',
+                  label: 'Thursday'},
+                { value: 'day4',
+                  label: 'Friday'},
+                { value: 'day5',
+                  label: 'Saturday'},
+                { value: 'day6',
+                  label: 'Sunday'}
+              ]}
+              onChange={this.changeDayPaintPropertyHandler.bind(this)}
             />
           </Section>
 
