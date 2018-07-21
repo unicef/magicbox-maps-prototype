@@ -85,6 +85,10 @@ body {
   display: block;
   font-size: 90%;
 }
+.radioGroup__element {
+  display: block;
+  font-size: 70%;
+}
 .search {
   margin-bottom: 2rem;
 }

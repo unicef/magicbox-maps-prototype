@@ -6,7 +6,7 @@
  * @return {Array} features array
  */
 
-export function diagonal_activity(features , activity_array ,  destination){
+export function diagonal_activity(features, activity_array, destination){
   console.log('Diagonal' + activity_array);
   let scores = get_scores(activity_array)
   console.log('score' + JSON.stringify(scores))
