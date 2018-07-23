@@ -184,6 +184,20 @@ class App extends Component {
     })
 
     // Handle shapes data if any
+    // shapesPromise.then(function(myJson) {
+    //    // Calculate indexes
+    //   myJson.features = calculate_index(
+    //     myJson.features, 'population', 'pop'
+    //   )
+    //   myJson.features = calculate_index(
+    //     myJson.features, 'threats', 'threats_index'
+    //   )
+    //   myJson.features = calculate_index(
+    //     myJson.features, 'violence', 'violence_index'
+    //   )
+    //
+    //   return myJson
+    // })
 
     // Handle school data if any
     schoolsPromise.then((geojson) => {
