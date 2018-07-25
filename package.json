@@ -5,6 +5,7 @@
   "dependencies": {
     "chart.js": "^2.7.2",
     "color-convert": "^1.9.1",
+    "d3": "^5.5.0",
     "husky": "^0.14.3",
     "mapbox-gl": "^0.44.1",
     "react": "^16.2.0",

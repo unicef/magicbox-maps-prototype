@@ -21,85 +21,26 @@ import ConnectivityChart from './components/connectivity-chart';
 // import {calculate_index} from './helpers/helper-index-scores';
 import apiConfig from './helpers/api-config';
 import countConnectivity from './helpers/count-connectivity';
+import config from './config';
+import helperMatrix from './helpers/helper-matrix';
+import helperGeojson from './helpers/helper-geojson';
+import helperMap from './helpers/helper-map';
 
 // Main style
 import './App.css';
 // Map colors
 const mapColors = {
   // higher color will be shown where indexes are 1
-  higher: '#0068EA',
+  higher: '#c21500', // strong red; prev: #0068EA - pure blue
   // lower color will be shown where indexes are 0
-  lower: '#DCDCDC'
+  lower: '#ffc500' // light orange; prev: #DCDCDC - very light gray
 }
 
 mapboxgl.accessToken = apiConfig.accessToken
 class App extends Component {
   constructor(props: Props) {
     super(props);
-    this.state = {
-      map: {},
-      lng: -74.2973,
-      lat: 4.5709,
-      zoom: 4.5,
-      connectivity_totals: null,
-      options: [],
-      searchValue: '',
-      schools: {},
-      regions: {},
-      admin_index : {},
-      matrix : [],
-      geojson:{},
-      mobility_alldays: [],
-      selected_admin: '',
-      daySelectDisabled: true
-    };
-  }
-
-  getMatrix(mobility, lookup) {
-    // hw is for height and width of matrix, i.e. the number of geo features high and wide
-    let hw = Object.keys(lookup).length;
-    console.log('hw', hw)
-    /* Mobility arrives in a two dimensional array where first array is colomn names [origin, destination, person] and each following array is a mobility [col_0_1_2-santibanko, col_0_1_3-santiblanko, 32]
-    */
-    let ary = new Array(hw);
-    for (var outer = 0 ; outer < hw ; outer++){
-      ary[outer] = new Array(hw);
-      ary[outer].fill(0);
-    }
-
-    /* Create a new array of size 1122 when a new admin is found. This array can be considered as a new row that is created everytime a origin id is found in the csv file. Later all the destination ID are filled in for that row.
-    */
-    for (var index = 0 ; index < mobility.length; index ++){
-      let row = mobility[index];
-      ary[lookup[row.id_origin]][lookup[row.id_destination]] = parseInt(row.people, 10)
-    }
-
-    return ary
-  }
-
-  getDiagonal(matrix) {
-    let mmm = matrix.reduce((a, e, i) => {
-      a[i] = matrix[i][i] || 0
-      return a
-    }, []);
-    return mmm
-  }
-
-  /*
-  Values passed in here will be converted to range 0:1. In addition, values in the lowest quarter will be buffed up by 4 times.
-  */
-  updateGeojsonWithConvertedValues(geojson, values_arr, value_type) {
-    let max = values_arr.reduce(function(a, b) {
-      return Math.max(a, b);
-    });
-    // push the converted values into the geojson file
-    geojson.features.forEach((f, i) => {
-      if (values_arr[i] >= max/4) {
-        f.properties[value_type] = values_arr[i]/max || 0
-      } else {
-        f.properties[value_type] = (4 * values_arr[i])/max || 0
-      }
-    })
+    this.state = helperMap.initializeMapState(config);
   }
 
   componentDidMount() {
@@ -112,7 +53,6 @@ class App extends Component {
 
     this.setState({map});
     // Promises
-    console.log('apiConfig: ', apiConfig)
     let shapesPromise  = fetch(apiConfig.shapes).then((resp) => resp.json())
     let schoolsPromise = fetch(apiConfig.schools).then((resp) => resp.json())
     let mobilityMondayPromise =
@@ -133,7 +73,6 @@ class App extends Component {
       map.on('load', (e) => {
         resolve(map)
       })
-
       map.on('error', (e) => {
         reject(map)
       })
@@ -162,13 +101,14 @@ class App extends Component {
       let mobility_alldays = [mobilityMon, mobilityTue, mobilityWed, mobilityThu, mobilityFri, mobilitySat, mobilitySun]
 
       // initial fetch of mobility is set to Monday as default. Monday mobility has index 0 in the array of all mobility
-      let matrix = this.getMatrix(mobility_alldays[0], admin_index);
-      let diagonal = this.getDiagonal(matrix);
+      let matrix = helperMatrix.getMatrix(mobility_alldays[0], admin_index);
+      let diagonal = helperMatrix.getDiagonal(matrix);
 
-      this.updateGeojsonWithConvertedValues(geojson, diagonal, 'activity_value')
+      geojson = helperGeojson.updateGeojsonWithConvertedValues(geojson, diagonal, 'activity_value')
 
       this.setState({
         matrix: matrix,
+        diagonal: diagonal,
         admin_index: admin_index,
         geojson: geojson,
         mobility_alldays: mobility_alldays
@@ -290,42 +230,46 @@ class App extends Component {
 
       // Add click event to update the Region layer when polygons are clicked
       map.on('click', 'regions', (e) => {
-        console.log('Clicked On Admin Number' )
         let selected_admin = e.features[0].properties.admin_id;
-        this.setState({ selected_admin: selected_admin  })
 
         let row_index = this.state.admin_index[selected_admin]
-        console.log(row_index)
         let row = []
-        console.dir(this.state.matrix)
-        for (var col_index = 0; col_index < Object.keys(this.state.admin_index).length; col_index++ ){
-              row[col_index] = this.state.matrix[row_index][col_index];
+        let value_to_paint_by = 'mobility_value'
+
+        // If the same admin is clicked, give us back the activity (= diagonal)
+        if (this.state.selected_admin === row_index) {
+          this.setState({ selected_admin: null  }) // reset selected_admin
+          value_to_paint_by = 'activity_value'
+          row_index = null
+          row = this.state.diagonal
+        } else { // If a different admin is clicked, show its outward mobility
+          this.setState({ selected_admin: row_index  })
+          // Start creating vector
+          for (let col_index = 0; col_index < Object.keys(this.state.admin_index).length; col_index++ ){
+                row[col_index] = this.state.matrix[row_index][col_index];
+          }
+          row[row_index] = this.state.diagonal[row_index] // WHY THIS LINE??
         }
 
-        this.updateGeojsonWithConvertedValues(this.state.geojson, row, 'mobility_value')
-
+        console.log('Start update geojson')
+        this.setState({
+          geojson: helperGeojson.updateGeojsonWithConvertedValues(
+            this.state.geojson,
+            row, // array of values
+            value_to_paint_by, // value type
+            row_index
+          )
+        })
+        console.log('Start apply geojson to map')
         // tell Map to update its data source
         this.state.map.getSource('regions').setData(this.state.geojson)
-
-        // build the aggregation query that will be used for color interpolation
-        let atts_to_aggregate = []
-        atts_to_aggregate.push("+")
-        let query = []
-        query.push("get")
-        query.push("mobility_value")
-        atts_to_aggregate.push(query)
 
         this.state.map.setPaintProperty(
           'regions',
           'fill-color',
-          // linear interpolation for colors going from lowerColor to higherColor accordingly to aggregation value
-          ['interpolate',
-            ['linear'],
-            ['/', atts_to_aggregate, atts_to_aggregate.length-1],
-            0, mapColors.lower,
-            1, mapColors.higher
-          ]
+          ['get', value_to_paint_by]
         )
+        console.log('End')
       })
 
       // Add click event to schools layer
@@ -385,7 +329,7 @@ class App extends Component {
       // reset value of selected_admin, so that next time Daily Activity/Mobility is clicked, activity will be displayed rather than the mobility of the old selected_admin
       // also, none clicked means Daily Activity/Mobility is not clicked either, hence disabling day selection
       this.setState({
-        selected_admin: '',
+        selected_admin: null,
         daySelectDisabled: true
       })
       return
@@ -393,30 +337,29 @@ class App extends Component {
 
     // build the aggregation query; at the same time check if day selection will be enabled or not
     let daySelectDisabled = true
-    let atts_to_aggregate =
-      Array.prototype.slice.call(matches).reduce((a,t) => {
+    let aggregation_query =
+      Array.prototype.slice.call(matches).reduce((q,t) => {
         // if Daily Activity/Mobility is checked, user can now select day
         if (t.value === 'activity_value') {
           daySelectDisabled = false
         }
-        a.push(['get', t.value])
-        return a
-      }, ['+'])
+        q.push(t.value)
+        return q
+      }, ['get'])
 
     this.setState({ daySelectDisabled: daySelectDisabled  })
 
-    console.log('atts_to_aggregate' + JSON.stringify(atts_to_aggregate))
     // Set new paint property to color the map
     this.state.map.setPaintProperty(
       'regions',
       'fill-color',
-      // linear interpolation for colors going from lowerColor to higherColor accordingly to aggregation value
-      ['interpolate',
-        ['linear'],
-        ['/', atts_to_aggregate, atts_to_aggregate.length-1],
-        0, mapColors.lower,
-        1, mapColors.higher
-      ]
+      aggregation_query
+      //['get', 'activity_value']
+    )
+    this.state.map.setPaintProperty(
+      'regions',
+      'fill-outline-color',
+      ['get', 'outline_color']
     )
   }
 
@@ -433,16 +376,16 @@ class App extends Component {
     let day_selected = matches[0].value;
     let index = parseInt(day_selected.slice(3), 10); // day_selected has the format 'day0', 'day1', etc.
     let updatedMatrix =
-      this.getMatrix(this.state.mobility_alldays[index], this.state.admin_index);
+      helperMatrix.getMatrix(this.state.mobility_alldays[index], this.state.admin_index);
 
     let value_type = ''
     let values = []
 
     if (this.state.selected_admin) { // if currently in 'mobility' mode aka an admin is being selected
       value_type = 'mobility_value'
-      let row_index = this.state.admin_index[this.state.selected_admin]
+      let row_index = this.state.selected_admin;
       for (
-        var col_index = 0;
+        let col_index = 0;
         col_index < Object.keys(this.state.admin_index).length;
         col_index++
       ) {
@@ -450,34 +393,22 @@ class App extends Component {
         }
     } else { // no admin selected means currently in 'activity' mode
       value_type = 'activity_value'
-      values = this.getDiagonal(updatedMatrix);
+      values = helperMatrix.getDiagonal(updatedMatrix);
     }
 
-    this.updateGeojsonWithConvertedValues(this.state.geojson, values, value_type)
+    this.setState({
+      matrix: updatedMatrix,
+      geojson: helperGeojson.updateGeojsonWithConvertedValues(this.state.geojson, values, value_type, this.state.selected_admin)
+    })
 
     // tell Map to update its data source
     this.state.map.getSource('regions').setData(this.state.geojson)
-    this.setState({ matrix: updatedMatrix })
 
-    // build the aggregation query that will be used for color interpolation
-    let atts_to_aggregate = []
-    atts_to_aggregate.push("+")
-    let query = []
-    query.push("get")
-    query.push(value_type)
-    atts_to_aggregate.push(query)
-    console.log(day_selected + ': atts_to_aggregate' + JSON.stringify(atts_to_aggregate))
-
+    // set new paint property to color the map
     this.state.map.setPaintProperty(
       'regions',
       'fill-color',
-      // linear interpolation for colors going from lowerColor to higherColor accordingly to aggregation value
-      ['interpolate',
-        ['linear'],
-        ['/', atts_to_aggregate, atts_to_aggregate.length-1],
-        0, mapColors.lower,
-        1, mapColors.higher
-      ]
+      ['get', value_type]
     )
   }
 
@@ -597,7 +528,7 @@ class App extends Component {
           </Section>
         </ControlPanel>
 
-        <Legend from={mapColors.higher} to={mapColors.lower} steps={10} leftText="More" rightText="Less" />
+        <Legend from={mapColors.lower} to={mapColors.higher} steps={10} leftText="Less" rightText="More" />
       </div>
     );
   }
