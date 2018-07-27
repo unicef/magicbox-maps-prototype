@@ -8,12 +8,12 @@
 export function calculate_index(features, source, destination) {
   // In case no value (threats or violence or activity), just use 0. (a temp hack :|)
   let scores = get_scores(features.map(f => { return f.properties[source] || 0}))
+  console.log('score' + JSON.stringify(scores))
   features.forEach((f, i) => {
     f.properties[destination] = scores[i];
   })
   return features
 }
-
 
 /**
  * Returns array of scores between 0 and 1
@@ -21,6 +21,7 @@ export function calculate_index(features, source, destination) {
  * @return {Boolean} score
  */
 function get_scores(ary) {
+  console.log('ary' + JSON.stringify(ary))
   if (ary.length < 1) {
     return []
   }
@@ -44,6 +45,7 @@ function get_scores(ary) {
  * @return {boolean} score
  */
 function score(min, max, number) {
+  console.log('min, max, number' + JSON.stringify(min) + ',' +JSON.stringify(max) + ',' + JSON.stringify(number) )
   let score_min = min
   let score_max = max
   let low_bound = 0
