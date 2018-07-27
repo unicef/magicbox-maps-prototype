@@ -30,8 +30,7 @@ const mapColors = {
   // lower color will be shown where indexes are 0
   lower: '#DCDCDC'
 }
-console.log('____')
-console.log(apiConfig)
+
 mapboxgl.accessToken = apiConfig.accessToken
 console.log(mapboxgl.accessToken, 'token')
 
@@ -40,9 +39,9 @@ class App extends Component {
     super(props);
     this.state = {
       map: {},
-      lng: -74.2973,
-      lat: 4.5709,
-      zoom: 4.5,
+      lng: 73.422503,
+      lat: 41.295678,
+      zoom: 6,
       connectivityTotals: null,
       options: [],
       searchValue: '',
@@ -257,6 +256,9 @@ class App extends Component {
           <div ref={el => this.mapContainer = el} className="mainMap" />
         </div>
         <ControlPanel>
+<br/>
+<br/>
+{/*
           <Select name="search" placeholder="School or municipality" multi={true} className="search" value={this.state.searchValue} onChange={(selectedOption) => {
             let regionFilter = null
             let schoolFilter = null
@@ -284,6 +286,7 @@ class App extends Component {
             this.state.map.setFilter('regions', regionFilter)
             this.state.map.setFilter('schools', schoolFilter)
           }} filterOptions={this.state.filter} options={this.state.options} arrowRenderer={() => <i className="fas fa-search" />} />
+
           <Section title="Region threats">
             <InputGroup type="checkbox" name="region" group={[
               { value: 'threats_index',
@@ -300,6 +303,7 @@ class App extends Component {
                 label: 'Population' }
             ]} onChange={this.changeRegionPaintPropertyHandler.bind(this)} />
           </Section>
+
           <Section title="School Capabilities">
             <InputGroup type="checkbox" name="school" group={[
               { value: 'schools',
@@ -309,12 +313,16 @@ class App extends Component {
               }
             ]} onChange={(e) => {}} />
           </Section>
+
           <p className="controlPanel__footerMessage">The selected items will be considered when calculating the risk level of schools and areas.</p>
+*/}
           <Section title="Connectivity Details">
             <ConnectivityChart totals={this.state.connectivityTotals}></ConnectivityChart>
           </Section>
         </ControlPanel>
+{/*
         <Legend from={mapColors.higher} to={mapColors.lower} steps={10} leftText="Most Risk" rightText="Least Risk" />
+*/}
       </div>
     );
   }
