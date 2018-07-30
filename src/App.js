@@ -53,7 +53,7 @@ class App extends Component {
   componentDidMount() {
     const map = new mapboxgl.Map({
       container: this.mapContainer,
-      style: 'mapbox://styles/mapbox/streets-v9',
+      style: 'mapbox://styles/mapbox/bright-v9',
       center: [this.state.lng, this.state.lat],
       zoom: this.state.zoom
     });
@@ -88,14 +88,14 @@ class App extends Component {
     shapesPromise.then(function(myJson) {
       // Calculate indexes
       myJson.features = calculate_index(
-        myJson.features, 'population', 'pop'
+        myJson.features, 'sum', 'pop'
       )
-      myJson.features = calculate_index(
-        myJson.features, 'threats', 'threats_index'
-      )
-      myJson.features = calculate_index(
-        myJson.features, 'violence', 'violence_index'
-      )
+      // myJson.features = calculate_index(
+      //   myJson.features, 'threats', 'threats_index'
+      // )
+      // myJson.features = calculate_index(
+      //   myJson.features, 'violence', 'violence_index'
+      // )
 
       return myJson
     })
@@ -258,6 +258,12 @@ class App extends Component {
         <ControlPanel>
 <br/>
 <br/>
+<Section title="Region vulnerabilities">
+  <InputGroup type="checkbox" name="region" group={[
+    { value: 'pop',
+      label: 'Population' }
+  ]} onChange={this.changeRegionPaintPropertyHandler.bind(this)} />
+</Section>
 {/*
           <Select name="search" placeholder="School or municipality" multi={true} className="search" value={this.state.searchValue} onChange={(selectedOption) => {
             let regionFilter = null
@@ -295,14 +301,7 @@ class App extends Component {
                 label: 'Violence Index' }
             ]} onChange={this.changeRegionPaintPropertyHandler.bind(this)} />
           </Section>
-          <Section title="Region vulnerabilities">
-            <InputGroup type="checkbox" name="region" group={[
-              { value: 'hdi',
-                label: 'Human Development Index' },
-              { value: 'pop',
-                label: 'Population' }
-            ]} onChange={this.changeRegionPaintPropertyHandler.bind(this)} />
-          </Section>
+
 
           <Section title="School Capabilities">
             <InputGroup type="checkbox" name="school" group={[

@@ -6,11 +6,37 @@
  * @return {Array} features array
  */
 export function calculate_index(features, source, destination) {
+
+  let max = features.reduce(function(a, b) {
+      return Math.max(a, b.properties[source]);
+  }, 0);
+
+  console.log(max);
+  features.forEach( feature => {
+    if(feature.properties[source] > max/ 4){
+    feature.properties[destination] = feature.properties[source] / max || 0
+  }else{
+    feature.properties[destination] = (4 * feature.properties[source])  / max || 0
+  }
+  });
+
+
   // In case no value (threats or violence), just use 0. (a temp hack :|)
-  let scores = get_scores(features.map(f => { return f.properties[source] || 0}))
-  features.forEach((f, i) => {
-    f.properties[destination] = scores[i];
-  })
+  //let scores = get_scores(features.map(f => { return f.properties[source] || 0}))
+  // console.dir(features)
+  //   let max = features.reduce(function(a, b) {
+  //     return Math.max(a, b.properties[source]);
+  //   });
+  //   // push the converted values into the geojson file
+  //   features.forEach((f, i) => {
+  //     if ( f.properties[source] >= max/4) {
+  //       f.properties[destination] = f.properties[source]/max || 0
+  //     } else {
+  //       f.properties[destination] = (4 * f.properties[source] ) /max || 0
+  //     }
+  //   });
+
+
   return features
 }
 
