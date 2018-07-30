@@ -30,8 +30,6 @@ const mapColors = {
   // lower color will be shown where indexes are 0
   lower: '#DCDCDC'
 }
-console.log('____')
-console.log(apiConfig)
 mapboxgl.accessToken = apiConfig.accessToken
 console.log(mapboxgl.accessToken, 'token')
 
@@ -60,8 +58,6 @@ class App extends Component {
     });
 
     this.setState({map});
-    console.log('***')
-    console.log(apiConfig);
     // Promises
     let shapesPromise  = fetch(apiConfig.shapes).then((response) => response.json())
     let schoolsPromise = fetch(apiConfig.schools).then((response) => response.json())
