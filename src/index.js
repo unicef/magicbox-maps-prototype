@@ -22,22 +22,28 @@ const handleAuthentication = ({location}) => {
     auth.handleAuthentication();
   }
 }
-// ReactDOM.render(<App />, document.getElementById('root'));
-ReactDOM.render(
-  <Router history={history}>
-    <div>
-      <Route path='/' render={(props) =>
-        <Shield auth={auth} {...props} />} />
-      <Route path='/home' render={(props) =>
-        <Home auth={auth} {...props} />} />
-      <Route path='/authorization/callback' render={(props) => {
-        handleAuthentication(props);
-        return <Callback {...props} />
-      }}/>
-    </div>
- </Router>,
-  document.getElementById('root')
-);
+
+if (config.login_required) {
+  ReactDOM.render(
+    <Router history={history}>
+      <div>
+        <Route path='/' render={(props) =>
+          <Shield auth={auth} {...props} />} />
+        <Route path='/home' render={(props) =>
+          <Home auth={auth} {...props} />} />
+        <Route path='/authorization/callback' render={(props) => {
+          handleAuthentication(props);
+          return <Callback {...props} />
+        }}/>
+      </div>
+   </Router>,
+    document.getElementById('root')
+  );
+} else {
+  ReactDOM.render(<App />, document.getElementById('root'));
+}
+
+
 registerServiceWorker();
 
 
