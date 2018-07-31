@@ -9,15 +9,18 @@ body {
   bottom: 0;
 }
 .navbar {
-  position: absolute;
   z-index: 1;
   height:0px;
+  position: absolute;
+  left:400px;
+  top: 10px;
 }
 .controlPanel {
   position: fixed;
   height: 100%;
   left: 0;
   z-index: 2;
+  top:-10px;
   background-color: #fff;
   width: 100%;
   border-right: 1px solid #000;
