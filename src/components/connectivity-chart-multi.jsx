@@ -1,7 +1,7 @@
 import React, { Component } from 'react';
 import Chart from 'chart.js';
 
-class ConnectivityChart extends Component {
+class ConnectivityChartMultiple extends Component {
   constructor(props: Props) {
     super(props);
     this.state = {
@@ -11,10 +11,9 @@ class ConnectivityChart extends Component {
 
   formatTotals(totals) {
     return [
-      totals.numHigh,
-      totals.numLow,
-      totals.numNone,
-      totals.numUnknown
+      totals.num4G,
+      totals.num3G,
+      totals.num2G,
     ]
   }
 
@@ -26,7 +25,7 @@ class ConnectivityChart extends Component {
 
   createChart() {
     console.log('Create Chart')
-    console.dir(this)
+    console.dir(this.props)
     let ctx = this.canvasEl.getContext("2d");
     let totals = this.formatTotals(this.props.totals);
     let chart = new Chart(ctx,{
@@ -35,17 +34,15 @@ class ConnectivityChart extends Component {
         datasets: [{
           data: totals,
           backgroundColor: [
-            'rgb(92, 184, 92)',
-            'rgb(245, 166, 35)',
-            'rgb(217, 83, 79)',
-            'rgb(106, 30, 116)'
+            'rgb(0, 255, 0)',
+            'rgb(245, 165, 0)',
+            'rgb(255, 0, 0)',
           ]
         }],
         labels: [
-          'Above 3Mbps',
-          'Below 3Mbps',
-          'Zero Connectivity',
-          'No Data'
+          '4G Connectivity',
+          '3G Connectivity',
+          '2G Connectivity',
         ],
       },
       options: {
@@ -85,4 +82,4 @@ class ConnectivityChart extends Component {
   }
 }
 
-export default ConnectivityChart
+export default ConnectivityChartMultiple
