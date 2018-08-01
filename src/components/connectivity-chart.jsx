@@ -25,6 +25,8 @@ class ConnectivityChart extends Component {
   }
 
   createChart() {
+    console.log('Create Chart')
+    console.dir(this)
     let ctx = this.canvasEl.getContext("2d");
     let totals = this.formatTotals(this.props.totals);
     let chart = new Chart(ctx,{
