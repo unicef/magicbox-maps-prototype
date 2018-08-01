@@ -4,8 +4,10 @@ function countConnectivity(schools) {
   let numNone = 0; // No connectivity
   let numUnknown = 0;
 
+
   schools.forEach(school => {
     let speed = school.properties.speed_connectivity;
+
     if (speed >= 3) {
       numHigh++;
     } else if (speed > 0) {
