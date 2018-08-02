@@ -2,7 +2,7 @@ import React, {Component, Fragment} from 'react'
 
 /**
  * Simple wrapper to map functions
- * keeps the responsability of displaying and hiding itself
+ * keeps the responsibility of displaying and hiding itself
  */
 class ControlPanel extends Component {
   render() {
@@ -15,7 +15,7 @@ class ControlPanel extends Component {
         </a>
         <div className="controlPanel" ref={(el) => this.ControlPanel = el}>
           <div className="controlPanel__header">
-            <a href="https://www.unicef.org" target="_blank" rel="noopener noreferrer" alt="Unicef" className="controlPanel__header__logo">UNICEF</a>
+            <a href="https://www.unicef.org" target="_blank" rel="noopener noreferrer" alt="Unicef" className="controlPanel__header__logo"></a>
             <a onClick={(e) => {
               this.ControlPanel.classList.add('controlPanel--hide')
             }} className="controlPanel__header__toggleButton">

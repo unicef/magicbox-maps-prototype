@@ -6,7 +6,7 @@ import '../App.css';
  * App
  * @return {Component}
  */
-class App extends Component {
+class Shield extends Component {
   /**
    * Route
    * @param  {Object} route
@@ -58,21 +58,9 @@ class App extends Component {
                 </div>
               )
             }
-            {
-              isAuthenticated() && (
-                <Button
-                  id="qsLogoutBtn"
-                  bsStyle="primary"
-                  className="btn-margin"
-                  onClick={this.logout.bind(this)}
-                >
-                  Log Out
-                </Button>
-              )
-            }
       </div>
     );
   }
 }
 
-export default App;
+export default Shield;

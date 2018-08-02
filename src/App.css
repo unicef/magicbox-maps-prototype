@@ -15,6 +15,10 @@ body {
 
 }
 
+.landing-screen-navbar {
+  display: inline;
+}
+
 .landing-screen-info {
   text-align: center;
   font-size: 14px;
@@ -24,6 +28,7 @@ body {
   background-color: #2785f7;
   color: #ffffff;
   padding: 12px;
+  display: inline;
 }
 
 .controlPanel {
