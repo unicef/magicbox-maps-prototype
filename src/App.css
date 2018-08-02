@@ -8,13 +8,24 @@ body {
   right: 0;
   bottom: 0;
 }
-.navbar {
-  z-index: 1;
-  height:0px;
-  position: absolute;
-  left:400px;
-  top: 10px;
+.landing-screen-navbar-title {
+  color: #ffffff;
+  background-color: #2785f7;
+  padding: 12px;
+
 }
+
+.landing-screen-info {
+  text-align: center;
+  font-size: 14px;
+}
+
+.btn-login {
+  background-color: #2785f7;
+  color: #ffffff;
+  padding: 12px;
+}
+
 .controlPanel {
   position: fixed;
   height: 100%;
@@ -151,6 +162,13 @@ body {
   .controlPanel--hide ~ .legend {
     left: 5vw;
   }
+
+  .landing-screen-info {
+    text-align: center;
+    padding: 20px;
+    font-size: 20px;
+  }
+
 }
 .search__option {
   font-size: 12px;
