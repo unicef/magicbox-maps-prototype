@@ -1,10 +1,11 @@
+/* global process */
 // The school data is on a temporary Azure store and should be replaced
 // with a longer-term storage solution in the future.
 
 const apiConfig = {
-  schools: process.env.REACT_APP_SCHOOLS_URL,
-  shapes: process.env.REACT_APP_SHAPES_URL,
-  accessToken: process.env.REACT_APP_MAPBOX_TOKEN
+    schools: process.env.REACT_APP_SCHOOLS_URL,
+    shapes: process.env.REACT_APP_SHAPES_URL,
+    accessToken: process.env.REACT_APP_MAPBOX_TOKEN
 }
 
-export default apiConfig;
+export default apiConfig
