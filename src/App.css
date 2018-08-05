@@ -3,16 +3,31 @@ body {
 }
 .mainMap {
   position: absolute;
-  top: 0;
+  top: 45px;
   left: 0;
   right: 0;
   bottom: 0;
 }
 .landing-screen-navbar-title {
   color: #ffffff;
+  cursor: pointer;
   background-color: #2785f7;
   padding: 12px;
+  height:50px;
+  text-align: right;
+}
 
+.landing-screen-navbar-logo {
+  position: absolute;
+  left: 50px;
+  background-image: url("/unicef.png");
+  background-repeat: no-repeat;
+  background-size: contain;
+  display: block;
+  width: 100px;
+  min-width: 120px;
+  height: 100px;
+  color: #FFF;
 }
 
 .landing-screen-navbar {

@@ -1,5 +1,6 @@
 import history from '../history';
 import auth0 from 'auth0-js';
+import config from '../../config'
 import {AUTH_CONFIG} from './auth0-variables';
 
 /**
@@ -31,18 +32,28 @@ export default class Auth {
     this.auth0.authorize();
   }
 
+  role_accepted(auth0_roles) {
+    if (!auth0_roles) {
+      return false
+    }
+    let match = config.accepted_roles.filter(value => -1 !== auth0_roles.indexOf(value));
+    return match.length > 0
+  }
   /**
    * Handle authentication
    */
   handleAuthentication() {
     this.auth0.parseHash((err, authResult) => {
-      if (authResult && authResult.accessToken && authResult.idToken) {
+      let role_accepted = this.role_accepted(authResult.idTokenPayload['magic-box/roles'])
+      console.log(role_accepted, 'aaaa')
+      if (role_accepted && authResult && authResult.accessToken && authResult.idToken) {
+        console.log("PASSED")
         this.setSession(authResult);
         history.replace('/home');
-      } else if (err) {
+      } else {
         history.replace('/home');
-        console.log(err);
-        alert(`Error: ${err.error}. Check the console for further details.`);
+        // console.log(err);
+        // alert(`Error: ${err.error}. Check the console for further details.`);
       }
     });
   }
@@ -53,10 +64,9 @@ export default class Auth {
    * @param {object} authResult Authorization result
    */
   setSession(authResult) {
-    console.log(authResult, '!!!!')
     // Set the time that the access token will expire at
     let expiresAt = JSON.stringify((authResult.expiresIn * 1000) +
-      new Date().getTime());
+    new Date().getTime());
     localStorage.setItem('access_token', authResult.accessToken);
     localStorage.setItem('id_token', authResult.idToken);
     localStorage.setItem('expires_at', expiresAt);

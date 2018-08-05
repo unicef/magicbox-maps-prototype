@@ -37,27 +37,35 @@ class Shield extends Component {
     return (
       <div>
         <div className="landing-screen-navbar">
-            <p className="landing-screen-navbar-title">UNICEF Office of Innovation</p>
+        <a href="https://www.unicef.org" target="_blank" rel="noopener noreferrer" alt="Unicef" className="landing-screen-navbar-logo"></a>
+            <p className="landing-screen-navbar-title">
+        {
+          isAuthenticated() && (
+
+              <span onClick={this.logout.bind(this)}>Log out</span>
+
+          )}
+            </p>
         </div>
-            {
-              !isAuthenticated() && (
-                <div className="landing-screen-info">
-                  <p>Welcome to the [TITLE OF MAP PROJECT HERE].</p>
-                  <br></br>
-                  <br></br>
-                  <br></br>
-                  <p>This project is a visualization tool that provides data to help inform humanitarian responses.</p>
-                  <br></br>
-                  <p>Please login to continue.</p>
-                  <Button
-                    className="btn-login"
-                    onClick={this.login.bind(this)}
-                  >
-                    Log In
-                  </Button>
-                </div>
-              )
-            }
+          {
+            !isAuthenticated() && (
+              <div className="landing-screen-info">
+                <p>Welcome to Magicbox Maps.</p>
+                <br></br>
+                <br></br>
+                <br></br>
+                <p>This project is a visualization tool that provides data to help inform humanitarian response.</p>
+                <br></br>
+                <p>Please login to continue.</p>
+                <Button
+                  className="btn-login"
+                  onClick={this.login.bind(this)}
+                >
+                  Log In
+                </Button>
+              </div>
+            )
+          }
       </div>
     );
   }
