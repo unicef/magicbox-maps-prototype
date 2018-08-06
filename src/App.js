@@ -1,7 +1,7 @@
 import React, { Component } from 'react';
 import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
-
+import config from './config'
 // Third-party React components
 import 'react-select/dist/react-select.css';
 import 'react-virtualized/styles.css';
@@ -24,7 +24,7 @@ import apiConfig from './helpers/api-config';
 import countConnectivity from './helpers/count-connectivity';
 import countConnectivityMultiple from './helpers/count-connectivity-multi';
 // Main style
-import './App.css';
+import './css/App.css';
 // Map colors
 const mapColors = {
   // higher color will be shown where indexes are 1
@@ -291,6 +291,7 @@ class App extends Component {
   }
 
   render() {
+    let mainMap_class_name = config.login_required ? 'mainMap' : 'mainMap mainMap-noLogin'
     let PieChart = null;
     if (this.state.displayChartM === true){
       PieChart =
@@ -306,7 +307,7 @@ class App extends Component {
     return (
       <div className="App">
         <div>
-          <div ref={el => this.mapContainer = el} className="mainMap" />
+          <div ref={el => this.mapContainer = el} className={mainMap_class_name} />
         </div>
         <ControlPanel>
           <Select name="search" placeholder="School or municipality" multi={true} className="search" value={this.state.searchValue} onChange={(selectedOption) => {

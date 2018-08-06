@@ -1,7 +1,8 @@
 // eslint-disable-next-line no-unused-vars
 import React, {Component} from 'react';
 import {Navbar, Button} from 'react-bootstrap';
-import '../App.css';
+import '../css/App.css';
+import '../css/auth.css';
 /**
  * App
  * @return {Component}

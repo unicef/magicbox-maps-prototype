@@ -1,4 +1,5 @@
 import React, {Component, Fragment} from 'react'
+import config from '../config'
 
 /**
  * Simple wrapper to map functions
@@ -6,6 +7,7 @@ import React, {Component, Fragment} from 'react'
  */
 class ControlPanel extends Component {
   render() {
+    let class_name = config.login_required ? 'controlPanel' : 'controlPanel controlPanel-noLogin'
     return (
       <Fragment>
         <a onClick={(e) => {
@@ -13,7 +15,7 @@ class ControlPanel extends Component {
         }} className="controlPanel__header__toggleButton controlPanel__header__toggleButton--closed">
           <i className="fas fa-bars" />
         </a>
-        <div className="controlPanel" ref={(el) => this.ControlPanel = el}>
+        <div className = {class_name} ref={(el) => this.ControlPanel = el}>
           <div className="controlPanel__header">
             <a href="https://www.unicef.org" target="_blank" rel="noopener noreferrer" alt="Unicef" className="controlPanel__header__logo"></a>
             <a onClick={(e) => {
