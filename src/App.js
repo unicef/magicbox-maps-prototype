@@ -47,7 +47,8 @@ class App extends Component {
       options: [],
       searchValue: '',
       schools: {},
-      regions: {}
+      regions: {},
+      ...config.map
     };
   }
 
@@ -86,25 +87,11 @@ class App extends Component {
 
     // Handle shapes data
     shapesPromise.then(function(myJson) {
-      // Calculate indexes
-      myJson.features = calculate_index(
-        myJson.features, 'population', 'pop'
-      )
-      myJson.features = calculate_index(
-        myJson.features, 'threats', 'threats_index'
-      )
-      myJson.features = calculate_index(
-        myJson.features, 'violence', 'violence_index'
-      )
-
       return myJson
     })
 
     // Handle school data
     schoolsPromise.then((geojson) => {
-      this.setState({
-        connectivityTotals: countConnectivity(geojson.features)
-      })
     })
 
     // When data arrives, process them in the background
@@ -257,9 +244,6 @@ class App extends Component {
           <div ref={el => this.mapContainer = el} className={mainMap_class_name} />
         </div>
         <ControlPanel>
-          <Section title="Connectivity Details">
-            <ConnectivityChart totals={this.state.connectivityTotals}></ConnectivityChart>
-          </Section>
         </ControlPanel>
         <Legend from={mapColors.higher} to={mapColors.lower} steps={10} leftText="Most Risk" rightText="Least Risk" />
       </div>
