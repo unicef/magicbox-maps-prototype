@@ -44,8 +44,13 @@ export default class Auth {
    */
   handleAuthentication() {
     this.auth0.parseHash((err, authResult) => {
+      console.log(err)
+      if (err) {
+        // User is likely not yet authorized
+        alert('Please confirm your email address and log in again.')
+        return history.replace('/home');
+      }
       let role_accepted = this.role_accepted(authResult.idTokenPayload['magic-box/roles'])
-      console.log(role_accepted, 'aaaa')
       if (role_accepted && authResult && authResult.accessToken && authResult.idToken) {
         console.log("PASSED")
         this.setSession(authResult);
