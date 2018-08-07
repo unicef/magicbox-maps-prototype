@@ -1,7 +1,11 @@
 import os
 import json
+import sys
 
-path = os.getcwd() + '/2015-02-01.csv'
+filename = sys.argv[1]
+
+
+path = os.getcwd() + '/' + filename + '.csv'
 
 list1 = []
 with open(path , 'r') as csv:
@@ -17,7 +21,7 @@ with open(path , 'r') as csv:
 
 
 json = json.dumps(list1)
-newpath = os.getcwd() + '/2015-02-01.json'
+newpath = os.getcwd() + '/movement-day' + filename[0] + '.json'
 f = open(newpath,"w")
 f.write(json)
 f.close()

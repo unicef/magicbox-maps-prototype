@@ -5,17 +5,6 @@
  * @param  {String} destination
  * @return {Array} features array
  */
-
-export function diagonal_activity(features, activity_array, destination){
-  console.log('Diagonal' + activity_array);
-  let scores = get_scores(activity_array)
-  console.log('score' + JSON.stringify(scores))
-  features.forEach((f, i) => {
-    f.properties[destination] = scores[i];
-  })
-  return features
-}
-
 export function calculate_index(features, source, destination) {
   // In case no value (threats or violence or activity), just use 0. (a temp hack :|)
   let scores = get_scores(features.map(f => { return f.properties[source] || 0}))
@@ -25,7 +14,6 @@ export function calculate_index(features, source, destination) {
   })
   return features
 }
-
 
 /**
  * Returns array of scores between 0 and 1
