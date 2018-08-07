@@ -16,6 +16,7 @@ import InputGroup from './components/input-group';
 import Legend from './components/legend';
 import ConnectivityChart from './components/connectivity-chart';
 import ConnectivityChartMultiple from './components/connectivity-chart-multi';
+import setConnectivityColor from './helpers/set-connectivity-color';
 import RadioGroup from './components/radiogroup'
 
 // Helpers
@@ -109,17 +110,8 @@ class App extends Component {
         connectivityTotalsM: countConnectivity(geojson.features),
       })
 
-      let red = [255,0,0];
-      let green = [0,255,0];
-      let orange = [255,165,0];
       geojson = geojson.features.forEach((school, index) => {
-        if(school.properties.connectivity4G > 0){
-          school.properties.f_color = green
-        }else if(school.properties.connectivity3G > 0){
-          school.properties.f_color = orange
-        }else{
-          school.properties.f_color = red
-        }
+        school = setConnectivityColor(school)
       });
     })
 
