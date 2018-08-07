@@ -40,9 +40,6 @@ class App extends Component {
     super(props);
     this.state = {
       map: {},
-      lng: -74.2973,
-      lat: 4.5709,
-      zoom: 4.5,
       connectivityTotals: null,
       options: [],
       searchValue: '',
