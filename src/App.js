@@ -33,9 +33,8 @@ const mapColors = {
   // lower color will be shown where indexes are 0
   lower: '#DCDCDC'
 }
-mapboxgl.accessToken = apiConfig.accessToken
-console.log(mapboxgl.accessToken, 'token')
 
+mapboxgl.accessToken = apiConfig.accessToken
 class App extends Component {
   constructor(props: Props) {
     super(props);
@@ -44,10 +43,7 @@ class App extends Component {
       lng: -74.2973,
       lat: 4.5709,
       zoom: 4.5,
-      connectivityTotalsM: null,
-      connectivityTotalsF: null,
-      displayChartM : false,
-      displayChartF : true,
+      connectivityTotals: null,
       options: [],
       searchValue: '',
       schools: {},
@@ -64,6 +60,7 @@ class App extends Component {
     });
 
     this.setState({map});
+
     // Promises
     let shapesPromise  = fetch(apiConfig.shapes).then((response) => response.json())
     let schoolsPromise = fetch(apiConfig.schools).then((response) => response.json())
@@ -106,13 +103,8 @@ class App extends Component {
     // Handle school data
     schoolsPromise.then((geojson) => {
       this.setState({
-        connectivityTotalsF: countConnectivityMultiple(geojson.features),
-        connectivityTotalsM: countConnectivity(geojson.features),
+        connectivityTotals: countConnectivity(geojson.features)
       })
-
-      geojson = geojson.features.forEach((school, index) => {
-        school = setConnectivityColor(school)
-      });
     })
 
     // When data arrives, process them in the background
@@ -185,9 +177,8 @@ class App extends Component {
             'base': 1.75,
             'stops':[[12, 2], [22, 180]]
           },
-          'circle-color': ['get', 'f_color']
+          'circle-color': ['get', 'color']
         }
-
       });
 
       // Add click event to schools layer
@@ -222,36 +213,12 @@ class App extends Component {
     // will be 'visible' or 'none'
     let currentState = e.target.checked ? 'visible' : 'none'
 
-    console.log('playLayerHandler');
-    console.dir(layerName);
-    console.dir(currentState);
-    let atts_to_aggregate = null;
-    if (layerName === 'schools_f'){
-      atts_to_aggregate = ['get' , 'f_color']
-      this.setState({
-        displayChartF : true,
-        displayChartM : false,
-      })
-    } else if (layerName === 'schools_m'){
-      atts_to_aggregate = ['get' , 'color']
-      this.setState({
-        displayChartF : false,
-        displayChartM : true,
-      })
-    }
-    console.dir(atts_to_aggregate);
-    this.state.map.setPaintProperty(
-      'schools',
-      'circle-color',
-      atts_to_aggregate
-    )
     // Set layer visibility
     this.state.map.setLayoutProperty(layerName, 'visibility', currentState)
   }
 
   changeRegionPaintPropertyHandler(e) {
     // Get all checked inputs for regions
-
     let matches = document.querySelectorAll("input[name=region]:checked");
 
     // Change layer visibility if there are matches
@@ -284,82 +251,15 @@ class App extends Component {
 
   render() {
     let mainMap_class_name = config.login_required ? 'mainMap' : 'mainMap mainMap-noLogin'
-    let PieChart = null;
-    if (this.state.displayChartM === true){
-      PieChart =
-      <Section title="Connectivity Details">
-       <ConnectivityChart totals={this.state.connectivityTotalsM}></ConnectivityChart>
-     </Section>
-   } else if (this.state.displayChartF === true) {
-      PieChart =
-      <Section title="Connectivity Details">
-       <ConnectivityChartMultiple totals={this.state.connectivityTotalsF}></ConnectivityChartMultiple>
-     </Section>
-    }
     return (
       <div className="App">
         <div>
           <div ref={el => this.mapContainer = el} className={mainMap_class_name} />
         </div>
         <ControlPanel>
-          <Select name="search" placeholder="School or municipality" multi={true} className="search" value={this.state.searchValue} onChange={(selectedOption) => {
-            let regionFilter = null
-            let schoolFilter = null
-
-            // Set current state
-            this.setState({searchValue: selectedOption})
-
-            if (selectedOption.length) {
-              // Create filter for regions to look into all 'NOMBRE's
-              regionFilter = ['any'].concat(...selectedOption.map((input) => {
-                  return [
-                    ['==', ['get', 'NOMBRE_C'], input.value],
-                    ['==', ['get', 'NOMBRE_D'], input.value],
-                    ['==', ['get', 'NOMBRE_M'], input.value]
-                  ]
-                }))
-
-              // Create filter for schools to look into every 'name'
-              schoolFilter = ['any'].concat(selectedOption.map((input) => {
-                return ['==', ['get', 'name'], input.value]
-              }))
-            }
-
-            // Set filters
-            this.state.map.setFilter('regions', regionFilter)
-            this.state.map.setFilter('schools', schoolFilter)
-          }} filterOptions={this.state.filter} options={this.state.options} arrowRenderer={() => <i className="fas fa-search" />} />
-          <Section title="Region threats">
-            <InputGroup type="checkbox" name="region" group={[
-              { value: 'threats_index',
-                label: 'Natural Disasters Index' },
-              { value: 'violence_index',
-                label: 'Violence Index' }
-            ]} onChange={this.changeRegionPaintPropertyHandler.bind(this)} />
+          <Section title="Connectivity Details">
+            <ConnectivityChart totals={this.state.connectivityTotals}></ConnectivityChart>
           </Section>
-          <Section title="Region vulnerabilities">
-            <InputGroup type="checkbox" name="region" group={[
-              { value: 'hdi',
-                label: 'Human Development Index' },
-              { value: 'pop',
-                label: 'Population' }
-            ]} onChange={this.changeRegionPaintPropertyHandler.bind(this)} />
-          </Section>
-          <Section title="School Capabilities">
-            <RadioGroup type="radio" name="school" group={[
-              { value: 'schools_m',
-                label: 'Connectivity M',
-                onChange: this.displayLayerHandler.bind(this),
-              },
-              { value: 'schools_f',
-                label: 'Connectivity F',
-                onChange: this.displayLayerHandler.bind(this),
-                defaultChecked:'checked'
-              }
-            ]} onChange={(e) => {}} />
-          </Section>
-          <p className="controlPanel__footerMessage">The selected items will be considered when calculating the risk level of schools and areas.</p>
-          {PieChart}
         </ControlPanel>
         <Legend from={mapColors.higher} to={mapColors.lower} steps={10} leftText="Most Risk" rightText="Least Risk" />
       </div>
