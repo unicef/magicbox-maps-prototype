@@ -292,10 +292,11 @@ class App extends Component {
   }
 
   render() {
+    let mainMap_class_name = config.login_required ? 'mainMap' : 'mainMap mainMap-noLogin'
     return (
       <div className="App">
         <div>
-          <div ref={el => this.mapContainer = el} className="mainMap" />
+          <div ref={el => this.mapContainer = el} className={mainMap_class_name} />
         </div>
         <ControlPanel>
           <Section title="Region Mobility">
