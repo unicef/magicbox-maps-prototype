@@ -1,4 +1,5 @@
-import { interpolateRgb } from 'd3-interpolate';
+import { interpolateRgb } from 'd3-interpolate'
+import config from '../config'
 const helperGeojson = {
   format_regions_for_select: function (geojson) {
     return geojson.features.map((feature) => {
@@ -55,6 +56,7 @@ const helperGeojson = {
       }
       let rgb = colors(gradient_val)
       let shade = rgb.substring(4, rgb.length-1).replace(/ /g, '').split(',').map(e => { return parseInt(e)})
+      shade.push(config.opacity)
       f.properties[value_type] = shade
       if (feature_index === i) {
         // f.properties.outline_color = 'aqua'
