@@ -30,7 +30,6 @@ const helperGeojson = {
   Values passed in here will be converted to range 0:1. In addition, values in the lowest quarter will be buffed up by 4 times.
   */
   updateGeojsonWithConvertedValues: function (geojson, values_arr, value_type, feature_index) {
-    console.log(geojson, values_arr, value_type, feature_index)
     const colors = interpolateRgb('blue', 'red')
     // Inter admin mobility needs to be muted before finding max
 
@@ -54,10 +53,12 @@ const helperGeojson = {
       } else {
         gradient_val = (4 * values_arr[i])/max || 0
       }
-      f.properties[value_type] = colors(gradient_val)
+      let rgb = colors(gradient_val)
+      let shade = rgb.substring(4, rgb.length-1).replace(/ /g, '').split(',').map(e => { return parseInt(e)})
+      f.properties[value_type] = shade
       if (feature_index === i) {
         // f.properties.outline_color = 'aqua'
-        f.properties[value_type] = 'gray' //f.properties['activity_value']
+        f.properties[value_type] = [155,128,128, 0.6] //f.properties['activity_value']
       }
     })
     return geojson
