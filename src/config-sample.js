@@ -4,6 +4,7 @@ module.exports = {
   login_required: process.env.REACT_APP_LOGIN_REQUIRED || false,
   accepted_roles: ['admin'],
   app_name: 'Magicbox Maps',
+  opacity: 0.8,
   acceptable_percent: 60,
   map: {
     lng: 23.684203,
