@@ -15,38 +15,30 @@ import Section from './components/section';
 import InputGroup from './components/input-group';
 import Legend from './components/legend';
 import ConnectivityChart from './components/connectivity-chart';
-import ConnectivityChartMultiple from './components/connectivity-chart-multi';
-import setConnectivityColor from './helpers/set-connectivity-color';
-import RadioGroup from './components/radiogroup'
 
 // Helpers
 import {calculate_index} from './helpers/helper-index-scores';
 import apiConfig from './helpers/api-config';
 import countConnectivity from './helpers/count-connectivity';
-import countConnectivityMultiple from './helpers/count-connectivity-multi';
+import helperMatrix from './helpers/helper-matrix'
+import helperGeojson from './helpers/helper-geojson'
+import helperMap from './helpers/helper-map'
+
 // Main style
 import './css/App.css';
 // Map colors
 const mapColors = {
   // higher color will be shown where indexes are 1
-  higher: '#0068EA',
+  higher: '#ff0000',
   // lower color will be shown where indexes are 0
-  lower: '#DCDCDC'
+  lower: '#0068EA'
 }
 
 mapboxgl.accessToken = apiConfig.accessToken
 class App extends Component {
   constructor(props: Props) {
     super(props);
-    this.state = {
-      map: {},
-      connectivityTotals: null,
-      options: [],
-      searchValue: '',
-      schools: {},
-      regions: {},
-      ...config.map
-    };
+    this.state = helperMap.initializeMapState(config)
   }
 
   componentDidMount() {
@@ -62,59 +54,61 @@ class App extends Component {
     // Promises
     let shapesPromise  = fetch(apiConfig.shapes).then((response) => response.json())
     let schoolsPromise = fetch(apiConfig.schools).then((response) => response.json())
+    let mobilityPromise = fetch(apiConfig.mobility).then((resp) => resp.json())
     let mapLoadPromise = new Promise((resolve, reject) => {
       map.on('load', (e) => {
         resolve(map)
       })
-
       map.on('error', (e) => {
         reject(map)
       })
     })
 
+    let mobility = []
     // Set data for regions when regions and map are available
-    Promise.all([shapesPromise, mapLoadPromise]).then(([geojson, map]) => {
+    Promise.all([shapesPromise, mapLoadPromise, mobilityPromise]).then(([geojson, map, mobility]) => {
+      // GeoJon file is read line by line and all admin are assigned an index
+      // One potential problem: If geoJSON WCOLGEN02_ id are different from MOBILITY file admin
+      // Here WCOLGEN02_ for admin 2 is 0 and is col_0_44_2_santiblanko the first row in the CSV file
+      let admin_index = geojson.features.reduce((h, f, i) => {
+       h[f.properties.admin_id] = i;
+       return h;
+      }, {});
+      let matrix = helperMatrix.getMatrix(mobility, admin_index);
+      let diagonal = helperMatrix.getDiagonal(matrix);
+      geojson = helperGeojson.updateGeojsonWithConvertedValues(geojson, diagonal, 'activity_value')
+      this.setState({
+        matrix : matrix,
+        diagonal: diagonal,
+        admin_index : admin_index,
+        geojson: geojson
+      });
       map.getSource('regions').setData(geojson)
+      this.state.map.setPaintProperty(
+        'regions',
+        'fill-color',
+        ['get', 'activity_value']
+      )
+      this.state.map.setPaintProperty(
+        'regions',
+        'fill-outline-color',
+        ['get', 'outline_color']
+      )
     })
 
-    // Set data for schools when regions and map are available
+        // Set data for schools when schools and map are available
     Promise.all([schoolsPromise, mapLoadPromise]).then(([geojson, map]) => {
       map.getSource('schools').setData(geojson)
     })
 
-    // Handle shapes data
-    shapesPromise.then(function(myJson) {
-      return myJson
-    })
-
-    // Handle school data
+    // Handle school data if any
     schoolsPromise.then((geojson) => {
-    })
-
-    // When data arrives, process them in the background
-    // to build a list of names for the search component
-    Promise.all([schoolsPromise, shapesPromise]).then(([schoolsGeojson, shapesGeojson]) => {
-      return new Promise((resolve, reject) => {
-        let webWorker = new Worker('ww-process-names.js')
-
-        webWorker.onmessage = (event) => {
-          resolve(event.data)
-        }
-
-        webWorker.onerror = (err) => {
-          reject(err)
-        }
-
-        // send geojsons to worker
-        webWorker.postMessage([schoolsGeojson, shapesGeojson])
-      })
-    }).then((options) => {
       this.setState({
-        options,
-        filter: createFilterOptions({options})
+        connectivity_totals: countConnectivity(geojson.features)
       })
     })
 
+    // Make map respond when user zooms or moves it around
     map.on('move', () => {
       const { lng, lat } = map.getCenter();
 
@@ -124,7 +118,12 @@ class App extends Component {
         zoom: map.getZoom().toFixed(2)
       });
     });
-
+    /*
+    Define map's properties when it's first loaded.
+    This includes:
+    - Adding 2 layers: 'regions' (for socio-econ metrics) & 'schools' (for school info & connectivity)
+    - Defining 'click' events for these 2 layers
+    */
     map.on('load', function(e) {
       map.addLayer({
         id: 'regions',
@@ -137,12 +136,6 @@ class App extends Component {
             features: []
           }
         },
-        layout: {
-          visibility: 'none'
-        },
-        paint: {
-          'fill-opacity': 0.5
-        }
       });
 
       map.addLayer({
@@ -158,12 +151,72 @@ class App extends Component {
         },
         paint: {
           'circle-radius': {
-            'base': 1.75,
-            'stops':[[12, 2], [22, 180]]
+            'property': 'people_moving_from_here',
+            type: 'exponential',
+            stops: [
+              [124, 2],
+              [34615, 10]
+            ]
           },
-          'circle-color': ['get', 'color']
+          'circle-opacity': 0.8,
+          'circle-color': 'orange' //['get', 'color']
         }
       });
+
+      // Add click event to update the Region layer when polygons are clicked
+      map.on('click', 'regions', (e) => {
+        console.log('Clicked On Admin Number', this.state.selected_admin )
+        let selected_admin = e.features[0].properties.admin_id;
+        let row_index = this.state.admin_index[selected_admin]
+        let value_to_scale_by = 'mobility_value'
+        let row = []
+
+        if (this.state.selected_admin === row_index) {
+          this.state.selected_admin = null
+          value_to_scale_by = 'activity_value'
+          row_index = null
+          row = this.state.diagonal
+        } else {
+          console.log('Start create vector')
+          // Create vector
+          this.state.selected_admin = row_index
+          for (let col_index = 0; col_index < Object.keys(this.state.admin_index).length; col_index++ ){
+            row[col_index] = this.state.matrix[row_index][col_index];
+          }
+          row[row_index] = this.state.diagonal[row_index]
+        }
+        console.log('Start update geojson')
+        console.log(this.state)
+        this.state.geojson = helperGeojson.updateGeojsonWithConvertedValues(
+          this.state.geojson,
+          row,
+          value_to_scale_by,
+          row_index
+        )
+        console.log('Start apply geojson to map')
+        // tell Map to update its data source
+        this.state.map.getSource('regions').setData(this.state.geojson)
+
+        // build the aggregation query that will be used for color interpolation
+        let atts_to_aggregate = []
+        atts_to_aggregate.push("+")
+        let query = []
+        query.push("get")
+        query.push("mobility_value")
+        atts_to_aggregate.push(query)
+        console.log('Start update colors')
+        this.state.map.setPaintProperty(
+          'regions',
+          'fill-color',
+          ['get', value_to_scale_by]
+        )
+        console.log('End')
+        // this.state.map.setPaintProperty(
+        //   'regions',
+        //   'fill-outline-color',
+        //   ['get', 'outline_color']
+        // )
+      })
 
       // Add click event to schools layer
       map.on('click', 'schools', (e) => {
@@ -181,6 +234,14 @@ class App extends Component {
       })
 
       // Change the cursor to a pointer
+      map.on('mouseenter', 'regions', (e) => {
+        map.getCanvas().style.cursor = 'pointer'
+      })
+
+      map.on('mouseleave', 'regions', (e) => {
+        map.getCanvas().style.cursor = ''
+      })
+
       map.on('mouseenter', 'schools', (e) => {
         map.getCanvas().style.cursor = 'pointer'
       })
@@ -188,11 +249,12 @@ class App extends Component {
       map.on('mouseleave', 'schools', (e) => {
         map.getCanvas().style.cursor = ''
       })
-    });
+
+    }.bind(this));
   }
 
   displayLayerHandler(e) {
-    // layer name should be stored in element's value property
+    // layer name should be stored in element's 'value' property
     let layerName = e.target.getAttribute('value')
     // will be 'visible' or 'none'
     let currentState = e.target.checked ? 'visible' : 'none'
@@ -204,8 +266,8 @@ class App extends Component {
   changeRegionPaintPropertyHandler(e) {
     // Get all checked inputs for regions
     let matches = document.querySelectorAll("input[name=region]:checked");
-
-    // Change layer visibility if there are matches
+    console.dir(matches)
+    // Make 'regions' layer visible if there are matches
     this.state.map.setLayoutProperty('regions', 'visibility', matches.length ? 'visible' : 'none')
 
     if (!matches.length) {
@@ -214,38 +276,64 @@ class App extends Component {
     }
 
     // build the aggregation query
-    let atts_to_aggregate = Array.prototype.slice.call(matches).reduce((a,t) => {
-      a.push(['get', t.value])
-      return a
-    }, ['+'])
+    let atts_to_aggregate =
+      Array.prototype.slice.call(matches).reduce((a,t) => {
+        a.push(['get', t.value])
+        return a
+      }, ['+'])
 
+    console.log('atts_to_aggregate' + JSON.stringify(atts_to_aggregate))
     // Set new paint property to color the map
     this.state.map.setPaintProperty(
       'regions',
       'fill-color',
-      // linear interpolation for colors going from lowerColor to higherColor accordingly to aggregation value
-      ['interpolate',
-        ['linear'],
-        ['/', atts_to_aggregate, atts_to_aggregate.length-1],
-        0, mapColors.lower,
-        1, mapColors.higher
-      ]
+      ['get', 'activity_value']
     )
   }
 
   render() {
-    let mainMap_class_name = config.login_required ? 'mainMap' : 'mainMap mainMap-noLogin'
     return (
       <div className="App">
         <div>
-          <div ref={el => this.mapContainer = el} className={mainMap_class_name} />
+          <div ref={el => this.mapContainer = el} className="mainMap" />
         </div>
         <ControlPanel>
+          <Section title="Region Mobility">
+            <InputGroup
+              type="checkbox"
+              name="region"
+              group={[
+                {
+                  defaultChecked: 'checked',
+                  value: 'activity_value',
+                  label: 'Mobility Index'}
+              ]}
+              onChange={this.changeRegionPaintPropertyHandler.bind(this)}
+            />
+          </Section>
+
+
+
+          <Section title="Towns">
+            <InputGroup type="checkbox" name="school" group={[
+              { value: 'schools',
+                label: 'Connectivity points',
+                onChange: this.displayLayerHandler.bind(this),
+                defaultChecked: 'checked'
+              }
+            ]} onChange={(e) => {}} />
+          </Section>
+
+{/*     <p className="controlPanel__footerMessage">The selected items will be considered when calculating the risk level of schools and areas.</p>
+*/}
         </ControlPanel>
-        <Legend from={mapColors.higher} to={mapColors.lower} steps={10} leftText="Most Risk" rightText="Least Risk" />
+
+
+        <Legend from={mapColors.lower} to={mapColors.higher} steps={10} leftText="Less" rightText="More" />
       </div>
     );
   }
 }
+
 
 export default App;
