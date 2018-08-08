@@ -77,17 +77,24 @@ class App extends Component {
       let matrix = helperMatrix.getMatrix(mobility, admin_index);
       let diagonal = helperMatrix.getDiagonal(matrix);
       geojson = helperGeojson.updateGeojsonWithConvertedValues(geojson, diagonal, 'activity_value')
+      let geojson_for_borders = helperGeojson.empty_geojson()
       this.setState({
         matrix : matrix,
         diagonal: diagonal,
         admin_index : admin_index,
-        geojson: geojson
+        geojson: geojson,
+        selected_features: geojson_for_borders
       });
       map.getSource('regions').setData(geojson)
       this.state.map.setPaintProperty(
         'regions',
         'fill-color',
         ['get', 'activity_value']
+      )
+      this.state.map.setPaintProperty(
+        'borders',
+        'fill-outline-color',
+        ['get', 'black']
       )
       this.state.map.setPaintProperty(
         'regions',
@@ -137,7 +144,18 @@ class App extends Component {
           }
         },
       });
-
+      map.addLayer({
+        id: 'borders',
+        type: 'fill',
+        // Add a GeoJSON source containing place coordinates and information.
+        source: {
+          type: 'geojson',
+          data: {
+            type: "FeatureCollection",
+            features: []
+          }
+        },
+      });
       map.addLayer({
         id: 'schools',
         type: 'circle',

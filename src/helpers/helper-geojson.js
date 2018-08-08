@@ -1,6 +1,12 @@
 import { interpolateRgb } from 'd3-interpolate'
 import config from '../config'
 const helperGeojson = {
+  empty_geojson: function() {
+    return {
+      'type': 'FeatureCollection',
+      'features': []
+    }
+  },
   format_regions_for_select: function (geojson) {
     return geojson.features.map((feature) => {
       // get all region names from geojson
