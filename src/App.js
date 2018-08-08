@@ -166,32 +166,39 @@ class App extends Component {
       // Add click event to update the Region layer when polygons are clicked
       map.on('click', 'regions', (e) => {
         console.log('Clicked On Admin Number', this.state.selected_admin )
+        // selected_admin is string
         let selected_admin = e.features[0].properties.admin_id;
         let row_index = this.state.admin_index[selected_admin]
         let value_to_scale_by = 'mobility_value'
         let row = []
-
-        if (this.state.selected_admin === row_index) {
-          this.state.selected_admin = null
-          value_to_scale_by = 'activity_value'
-          row_index = null
-          row = this.state.diagonal
+        let combined_vectors = []
+        // Here selected_admin is integer
+        // if (this.state.selected_admin === row_index) {
+        if (this.state.selected_admins[selected_admin]) {
+          delete this.state.selected_admins[selected_admin]
         } else {
+          // Setting this selected_admin to integer
+          this.state.selected_admins[selected_admin] = 1
+        }
           console.log('Start create vector')
           // Create vector
-          this.state.selected_admin = row_index
-          for (let col_index = 0; col_index < Object.keys(this.state.admin_index).length; col_index++ ){
-            row[col_index] = this.state.matrix[row_index][col_index];
+          if (Object.keys(this.state.selected_admins).length > 0) {
+            combined_vectors = helperMatrix.combine_vectors(
+              this.state.admin_index,
+              this.state.matrix,
+              this.state.selected_admins
+            )
+          } else {
+            combined_vectors = this.state.diagonal
           }
-          row[row_index] = this.state.diagonal[row_index]
-        }
+
         console.log('Start update geojson')
-        console.log(this.state)
         this.state.geojson = helperGeojson.updateGeojsonWithConvertedValues(
           this.state.geojson,
-          row,
+          combined_vectors,
           value_to_scale_by,
-          row_index
+          this.state.selected_admins,
+          this.state.admin_index
         )
         console.log('Start apply geojson to map')
         // tell Map to update its data source
@@ -312,9 +319,6 @@ class App extends Component {
               onChange={this.changeRegionPaintPropertyHandler.bind(this)}
             />
           </Section>
-
-
-
           <Section title="Towns">
             <InputGroup type="checkbox" name="school" group={[
               { value: 'schools',

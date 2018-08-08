@@ -30,13 +30,10 @@ const helperGeojson = {
   /*
   Values passed in here will be converted to range 0:1. In addition, values in the lowest quarter will be buffed up by 4 times.
   */
-  updateGeojsonWithConvertedValues: function (geojson, values_arr, value_type, feature_index) {
+  updateGeojsonWithConvertedValues: function (geojson, values_arr, value_type, selected_admins, admin_index) {
+    console.log(selected_admins)
     const colors = interpolateRgb('blue', 'red')
     // Inter admin mobility needs to be muted before finding max
-
-    if (feature_index) {
-      values_arr[feature_index] = 0
-    }
 
     let max = values_arr.reduce((a, b) => {
       return Math.max(a, b)
@@ -58,10 +55,13 @@ const helperGeojson = {
       let shade = rgb.substring(4, rgb.length-1).replace(/ /g, '').split(',').map(e => { return parseInt(e)})
       shade.push(config.opacity)
       f.properties[value_type] = shade
-      if (feature_index === i) {
-        // f.properties.outline_color = 'aqua'
-        f.properties[value_type] = [155,128,128, 0.6] //f.properties['activity_value']
+      if (selected_admins) {
+        if (selected_admins[f.properties.admin_id]) {
+          // f.properties.outline_color = 'aqua'
+          f.properties[value_type] = [155,128,128, 0.3] //f.properties['activity_value']
+        }
       }
+
     })
     return geojson
   }

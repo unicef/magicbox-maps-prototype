@@ -27,7 +27,29 @@ const helperMatrix = {
       return a
     }, []);
     return mmm
+  },
+  /**
+   * Combines all vectors for clicked admins
+   * @param  {Object} admin_index
+   * @param  {Object} matrix
+   * @param  {Object} selected_admins
+   * @return {Array} diagonal
+   */
+  combine_vectors: function(admin_index, matrix, selected_admins) {
+    let arys = Object.keys(selected_admins).map(admin_id => {
+      console.log(admin_id)
+      let admin_id_index = admin_index[admin_id]
+      let values = matrix[admin_index[admin_id]] || []
+      // Remove diagonal value for root admin
+      if (values.length > 1) {
+        values[admin_id_index] = 0;
+      }
+      return values
+    })
+    console.log(arys.length, arys)
+    return arys[0].map((_, i) =>
+      // sum elements at the same index in array of arrays into a single array
+      arys.reduce((p, item, j) => p + (arys[j][i] || 0), 0));
   }
-
 }
 export default helperMatrix

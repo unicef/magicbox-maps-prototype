@@ -13,7 +13,7 @@ const helperMap = {
       admin_index : {},
       matrix : [],
       geojson: {},
-      selected_admin: null,
+      selected_admins: {},
       diagonal: []
     };
   }
