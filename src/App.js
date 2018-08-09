@@ -70,17 +70,28 @@ class App extends Component {
       // GeoJon file is read line by line and all admin are assigned an index
       // One potential problem: If geoJSON WCOLGEN02_ id are different from MOBILITY file admin
       // Here WCOLGEN02_ for admin 2 is 0 and is col_0_44_2_santiblanko the first row in the CSV file
+      let index_admin = {}
       let admin_index = geojson.features.reduce((h, f, i) => {
        h[f.properties.admin_id] = i;
+       index_admin[i] = f.properties.admin_id
        return h;
       }, {});
+
       let matrix = helperMatrix.getMatrix(mobility, admin_index);
+      let no_data_admin_lookup = matrix.reduce((h, v, i) => {
+        if (v.filter(e => { return e > 0}).length === 0) {
+          h[index_admin[i]] = 1
+        }
+        return h
+      }, {})
+      console.log('no_data_admin_lookup', no_data_admin_lookup)
       let diagonal = helperMatrix.getDiagonal(matrix);
-      geojson = helperGeojson.updateGeojsonWithConvertedValues(geojson, diagonal, 'activity_value')
+      geojson = helperGeojson.updateGeojsonWithConvertedValues(geojson, diagonal, 'activity_value', null, null, no_data_admin_lookup)
       this.setState({
         matrix : matrix,
         diagonal: diagonal,
         admin_index : admin_index,
+        no_data_admin_lookup: no_data_admin_lookup,
         geojson: geojson
       });
       map.getSource('regions').setData(geojson)
@@ -163,6 +174,18 @@ class App extends Component {
         }
       });
 
+      map.addLayer({
+        id: 'region-outline',
+        type: 'line',
+        source: {
+          type: 'geojson',
+          data: {
+            type: "FeatureCollection",
+            features: []
+          }
+        }
+    });
+
       // Add click event to update the Region layer when polygons are clicked
       map.on('click', 'regions', (e) => {
         console.log('Clicked On Admin Number', this.state.selected_admin )
@@ -198,7 +221,8 @@ class App extends Component {
           combined_vectors,
           value_to_scale_by,
           this.state.selected_admins,
-          this.state.admin_index
+          this.state.admin_index,
+          this.state.no_data_admin_lookup
         )
         console.log('Start apply geojson to map')
         // tell Map to update its data source

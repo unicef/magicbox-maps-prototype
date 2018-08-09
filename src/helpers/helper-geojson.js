@@ -30,8 +30,7 @@ const helperGeojson = {
   /*
   Values passed in here will be converted to range 0:1. In addition, values in the lowest quarter will be buffed up by 4 times.
   */
-  updateGeojsonWithConvertedValues: function (geojson, values_arr, value_type, selected_admins, admin_index) {
-    console.log(selected_admins)
+  updateGeojsonWithConvertedValues: function (geojson, values_arr, value_type, selected_admins, admin_index, no_data_admin_lookup) {
     const colors = interpolateRgb('blue', 'red')
     // Inter admin mobility needs to be muted before finding max
 
@@ -45,7 +44,6 @@ const helperGeojson = {
       // This is mobility
       let gradient_val = 0
       // This is activity (diagonal)
-
       if (values_arr[i] >= max/4) {
         gradient_val = values_arr[i]/max || 0
       } else {
@@ -60,6 +58,10 @@ const helperGeojson = {
           // f.properties.outline_color = 'aqua'
           f.properties[value_type] = [155,128,128, 0.3] //f.properties['activity_value']
         }
+      }
+      //gray out admins that do not have any data
+      if (no_data_admin_lookup[f.properties.admin_id]) {
+        f.properties[value_type] = [90,90,90,0.5]
       }
 
     })
