@@ -132,6 +132,7 @@ body {
   float: left;
   box-sizing: border-box;
   border: 1px solid #000;
+  opacity: 0.6;
 }
 .legend__bar__element + .legend__bar__element {
   border-left: none;
