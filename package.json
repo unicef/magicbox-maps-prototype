@@ -1,5 +1,5 @@
 {
-  "name": "magicbox-maps",
+  "name": "magicbox-maps-prototype",
   "version": "0.1.0",
   "private": true,
   "dependencies": {
@@ -10,7 +10,7 @@
     "d3-interpolate": "^1.2.0",
     "history": "^4.7.2",
     "husky": "^0.14.3",
-    "mapbox-gl": "^0.44.1",
+    "mapbox-gl": "^0.47.0",
     "react": "^16.2.0",
     "react-bootstrap": "^0.32.1",
     "react-dom": "^16.2.0",

@@ -36,8 +36,7 @@ const helperGeojson = {
   /*
   Values passed in here will be converted to range 0:1. In addition, values in the lowest quarter will be buffed up by 4 times.
   */
-  updateGeojsonWithConvertedValues: function (geojson, values_arr, value_type, selected_admins, admin_index) {
-    console.log(selected_admins)
+  updateGeojsonWithConvertedValues: function (geojson, values_arr, value_type, selected_admins, admin_index, no_data_admin_lookup) {
     const colors = interpolateRgb('blue', 'red')
     // Inter admin mobility needs to be muted before finding max
 
@@ -48,15 +47,19 @@ const helperGeojson = {
     // push the converted values into the geojson file
     geojson.features.forEach((f, i) => {
       f.properties.outline_color = 'yellow'
+      f.properties.color= '#'+(Math.random()*0xFFFFFF<<0).toString(16);
+      f.properties.opacity= 0.6;
+
+      f.properties.base_height= 0
       // This is mobility
       let gradient_val = 0
       // This is activity (diagonal)
-
       if (values_arr[i] >= max/4) {
         gradient_val = values_arr[i]/max || 0
       } else {
         gradient_val = (4 * values_arr[i])/max || 0
       }
+      f.properties.height= gradient_val * 1000
       let rgb = colors(gradient_val)
       let shade = rgb.substring(4, rgb.length-1).replace(/ /g, '').split(',').map(e => { return parseInt(e)})
       shade.push(config.opacity)
@@ -67,8 +70,13 @@ const helperGeojson = {
           f.properties[value_type] = [155,128,128, 0.3] //f.properties['activity_value']
         }
       }
+      //gray out admins that do not have any data
+      if (no_data_admin_lookup[f.properties.admin_id]) {
+        f.properties[value_type] = [90,90,90,0.5]
+      }
 
     })
+    //geojson.features = [geojson.features[0]]
     return geojson
   }
 }

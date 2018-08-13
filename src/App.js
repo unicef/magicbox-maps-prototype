@@ -46,7 +46,9 @@ class App extends Component {
       container: this.mapContainer,
       style: 'mapbox://styles/mapbox/streets-v9',
       center: [this.state.lng, this.state.lat],
-      zoom: this.state.zoom
+      zoom: this.state.zoom,
+      pitch: 50,
+      bearing: 50
     });
 
     this.setState({map});
@@ -66,47 +68,199 @@ class App extends Component {
 
     let mobility = []
     // Set data for regions when regions and map are available
-    Promise.all([shapesPromise, mapLoadPromise, mobilityPromise]).then(([geojson, map, mobility]) => {
+    Promise.all([shapesPromise, mapLoadPromise, mobilityPromise, schoolsPromise]).then(([geojson, map, mobility, schools]) => {
       // GeoJon file is read line by line and all admin are assigned an index
       // One potential problem: If geoJSON WCOLGEN02_ id are different from MOBILITY file admin
       // Here WCOLGEN02_ for admin 2 is 0 and is col_0_44_2_santiblanko the first row in the CSV file
+      let index_admin = {}
       let admin_index = geojson.features.reduce((h, f, i) => {
        h[f.properties.admin_id] = i;
+       index_admin[i] = f.properties.admin_id
        return h;
       }, {});
+
       let matrix = helperMatrix.getMatrix(mobility, admin_index);
+      let no_data_admin_lookup = matrix.reduce((h, v, i) => {
+        if (v.filter(e => { return e > 0}).length === 0) {
+          h[index_admin[i]] = 1
+        }
+        return h
+      }, {})
+      console.log('no_data_admin_lookup', no_data_admin_lookup)
       let diagonal = helperMatrix.getDiagonal(matrix);
-      geojson = helperGeojson.updateGeojsonWithConvertedValues(geojson, diagonal, 'activity_value')
       let geojson_for_borders = helperGeojson.empty_geojson()
+      geojson = helperGeojson.updateGeojsonWithConvertedValues(geojson, diagonal, 'activity_value', null, null, no_data_admin_lookup)
       this.setState({
         matrix : matrix,
         diagonal: diagonal,
         admin_index : admin_index,
-        geojson: geojson,
-        selected_features: geojson_for_borders
+        selected_features: geojson_for_borders,
+        no_data_admin_lookup: no_data_admin_lookup,
+        geojson: geojson
       });
-      map.getSource('regions').setData(geojson)
-      this.state.map.setPaintProperty(
-        'regions',
-        'fill-color',
-        ['get', 'activity_value']
-      )
-      this.state.map.setPaintProperty(
-        'borders',
-        'fill-outline-color',
-        ['get', 'black']
-      )
-      this.state.map.setPaintProperty(
-        'regions',
-        'fill-outline-color',
-        ['get', 'outline_color']
-      )
+
+      map.addLayer({
+        id: 'regions',
+        type: 'fill-extrusion',
+        // Add a GeoJSON source containing place coordinates and information.
+        source: {
+          type: 'geojson',
+          data: geojson
+        },
+        'paint': {
+          'fill-extrusion-color': {
+            'property': 'height',
+            'stops': [
+              [0.1, 'white'],
+              [0.2, 'blue'],
+              [1000, 'red']
+            ]
+          },
+          'fill-extrusion-height': {
+            "property": 'height',
+            "stops": [
+              [1, 0],
+              [25, 1000],
+              [1000, 65535]
+            ]
+          },
+          'fill-extrusion-opacity': 1,
+          'fill-extrusion-base': 1,
+        }
+      });
+      console.log(geojson)
+      geojson.features = geojson.features.filter(f => { return !f.properties.height > 0})
+      console.log(geojson.features)
+      map.addLayer({
+        id: 'region-outlines',
+        type: 'fill',
+        // Add a GeoJSON source containing place coordinates and information.
+        source: {
+          type: 'geojson',
+          data: geojson
+        },
+        layout: {
+          visibility: 'visible'
+        },
+        paint: {
+          'fill-opacity': 0.1,
+          'fill-outline-color': 'black'
+        }
+      });
+
+      map.addLayer({
+        id: 'regions',
+        type: 'fill-extrusion',
+        // Add a GeoJSON source containing place coordinates and information.
+        source: {
+          type: 'geojson',
+          data: schools
+        },
+        'paint': {
+          'fill-extrusion-color': {
+            'property': 'height',
+            'stops': [
+              [0.1, 'white'],
+              [0.2, 'blue'],
+              [1000, 'red']
+            ]
+          },
+          'fill-extrusion-height': {
+            "property": 'height',
+            "stops": [
+              [1, 0],
+              [25, 1000],
+              [1000, 65535]
+            ]
+          },
+          'fill-extrusion-opacity': 0.9,
+          'fill-extrusion-base': 1,
+        }
+      });
+      // map.addLayer({
+      //   id: 'schools',
+      //   type: 'circle',
+      //   // Add a GeoJSON source containing place coordinates and information.
+      //   source: {
+      //     type: 'geojson',
+      //     data: schools
+      //   },
+      //   paint: {
+      //     'circle-radius': {
+      //       'property': 'people_moving_from_here',
+      //       type: 'exponential',
+      //       stops: [
+      //         [124, 2],
+      //         [34615, 10]
+      //       ]
+      //     },
+      //     "circle-pitch-scale": "map",
+      //     "circle-pitch-alignment": "map",
+      //     'circle-opacity': 0.8,
+      //     'circle-color': 'orange' //['get', 'color']
+      //   }
+      // });
+      // map.getSource('regions').setData(geojson)
+      // map.getLayer('regions').setPaintProperty(
+      //   'fill-color',
+      //   ['get', 'activity_value']
+      // )
+
+      // this.state.map.setPaintProperty(
+      //   'regions',
+      //   'fill-extrusion-color',
+      //   {
+      //     'property': 'height',
+      //     'stops': [
+      //       [1, 'white'],
+      //       [25, 'orange'],
+      //       [1000, 'firebrick']
+      //     ]
+      //   }
+      // )
+      // this.state.map.setPaintProperty(
+      //   'regions',
+      //   'fill-extrusion-height': {
+      //     "property": 'height',
+      //     "stops": [
+      //       [1, 0],
+      //       [25, 1000],
+      //       [1000, 65535]
+      //     ]
+      //   }
+      // )
+//       map.getLayer('regions').setPaintProperty('fill-extrusion-color', {
+//                 'property': 'height',
+//                 'stops': [
+//                   [1, 'white'],
+//                   [25, 'orange'],
+//                   [1000, 'firebrick']
+//                 ]
+//               })
+// map.getLayer('regions').setPaintProperty('fill-extrusion-height', {
+//           "property": 'height',
+//           "stops": [
+//             [1, 0],
+//             [25, 1000],
+//             [1000, 65535]
+//           ]
+//         })
+      // this.state.map.setPaintProperty(
+      //   'borders',
+      //   'fill-outline-color',
+      //   ['get', 'black']
+      // )
+      // this.state.map.setPaintProperty(
+      //   'regions',
+      //   'fill-outline-color',
+      //   ['get', 'outline_color']
+      // )
     })
 
-        // Set data for schools when schools and map are available
-    Promise.all([schoolsPromise, mapLoadPromise]).then(([geojson, map]) => {
-      map.getSource('schools').setData(geojson)
-    })
+    //     // Set data for schools when schools and map are available
+    // Promise.all([schoolsPromise, mapLoadPromise]).then(([geojson, map]) => {
+    //   map.getSource('schools').setData(geojson)
+    // })
 
     // Handle school data if any
     schoolsPromise.then((geojson) => {
@@ -133,18 +287,6 @@ class App extends Component {
     */
     map.on('load', function(e) {
       map.addLayer({
-        id: 'regions',
-        type: 'fill',
-        // Add a GeoJSON source containing place coordinates and information.
-        source: {
-          type: 'geojson',
-          data: {
-            type: "FeatureCollection",
-            features: []
-          }
-        },
-      });
-      map.addLayer({
         id: 'borders',
         type: 'fill',
         // Add a GeoJSON source containing place coordinates and information.
@@ -156,30 +298,19 @@ class App extends Component {
           }
         },
       });
+
+
       map.addLayer({
-        id: 'schools',
-        type: 'circle',
-        // Add a GeoJSON source containing place coordinates and information.
+        id: 'region-outline',
+        type: 'line',
         source: {
           type: 'geojson',
           data: {
             type: "FeatureCollection",
             features: []
           }
-        },
-        paint: {
-          'circle-radius': {
-            'property': 'people_moving_from_here',
-            type: 'exponential',
-            stops: [
-              [124, 2],
-              [34615, 10]
-            ]
-          },
-          'circle-opacity': 0.8,
-          'circle-color': 'orange' //['get', 'color']
         }
-      });
+    });
 
       // Add click event to update the Region layer when polygons are clicked
       map.on('click', 'regions', (e) => {
@@ -216,7 +347,8 @@ class App extends Component {
           combined_vectors,
           value_to_scale_by,
           this.state.selected_admins,
-          this.state.admin_index
+          this.state.admin_index,
+          this.state.no_data_admin_lookup
         )
         console.log('Start apply geojson to map')
         // tell Map to update its data source
