@@ -6,24 +6,16 @@ import config from './config'
 import 'react-select/dist/react-select.css';
 import 'react-virtualized/styles.css';
 import 'react-virtualized-select/styles.css';
-import Select from 'react-virtualized-select';
-import createFilterOptions from 'react-select-fast-filter-options';
 
 // Custom React components
 import ControlPanel from './components/control-panel';
 import Section from './components/section';
 import InputGroup from './components/input-group';
 import Legend from './components/legend';
-import ConnectivityChart from './components/connectivity-chart';
-import ConnectivityChartMultiple from './components/connectivity-chart-multi';
-import setConnectivityColor from './helpers/set-connectivity-color';
-import RadioGroup from './components/radiogroup'
 
 // Helpers
 import {calculate_index} from './helpers/helper-index-scores';
 import apiConfig from './helpers/api-config';
-import countConnectivity from './helpers/count-connectivity';
-import countConnectivityMultiple from './helpers/count-connectivity-multi';
 // Main style
 import './css/App.css';
 // Map colors
@@ -40,11 +32,6 @@ class App extends Component {
     super(props);
     this.state = {
       map: {},
-      connectivityTotals: null,
-      options: [],
-      searchValue: '',
-      schools: {},
-      regions: {},
       ...config.map
     };
   }
@@ -61,7 +48,6 @@ class App extends Component {
 
     // Promises
     let shapesPromise  = fetch(apiConfig.shapes).then((response) => response.json())
-    let schoolsPromise = fetch(apiConfig.schools).then((response) => response.json())
     let mapLoadPromise = new Promise((resolve, reject) => {
       map.on('load', (e) => {
         resolve(map)
@@ -77,42 +63,9 @@ class App extends Component {
       map.getSource('regions').setData(geojson)
     })
 
-    // Set data for schools when regions and map are available
-    Promise.all([schoolsPromise, mapLoadPromise]).then(([geojson, map]) => {
-      map.getSource('schools').setData(geojson)
-    })
-
     // Handle shapes data
     shapesPromise.then(function(myJson) {
       return myJson
-    })
-
-    // Handle school data
-    schoolsPromise.then((geojson) => {
-    })
-
-    // When data arrives, process them in the background
-    // to build a list of names for the search component
-    Promise.all([schoolsPromise, shapesPromise]).then(([schoolsGeojson, shapesGeojson]) => {
-      return new Promise((resolve, reject) => {
-        let webWorker = new Worker('ww-process-names.js')
-
-        webWorker.onmessage = (event) => {
-          resolve(event.data)
-        }
-
-        webWorker.onerror = (err) => {
-          reject(err)
-        }
-
-        // send geojsons to worker
-        webWorker.postMessage([schoolsGeojson, shapesGeojson])
-      })
-    }).then((options) => {
-      this.setState({
-        options,
-        filter: createFilterOptions({options})
-      })
     })
 
     map.on('move', () => {
@@ -145,60 +98,13 @@ class App extends Component {
         }
       });
 
-      map.addLayer({
-        id: 'schools',
-        type: 'circle',
-        // Add a GeoJSON source containing place coordinates and information.
-        source: {
-          type: 'geojson',
-          data: {
-            type: "FeatureCollection",
-            features: []
-          }
-        },
-        paint: {
-          'circle-radius': {
-            'base': 1.75,
-            'stops':[[12, 2], [22, 180]]
-          },
-          'circle-color': ['get', 'color']
-        }
-      });
-
-      // Add click event to schools layer
-      map.on('click', 'schools', (e) => {
-        let coordinates = e.features[0].geometry.coordinates.slice()
-        let schoolProperties = e.features[0].properties
-
-        // output all properties besides color
-        let html = Object.keys(schoolProperties)
-          .filter((key) => key !== 'color')
-          .reduce((acc, key) => {
-          return acc + `<p><strong>${key}:</strong> ${schoolProperties[key]}</p>`
-        }, '')
-
-        new mapboxgl.Popup().setLngLat(coordinates).setHTML(html).addTo(map)
-      })
-
       // Change the cursor to a pointer
-      map.on('mouseenter', 'schools', (e) => {
         map.getCanvas().style.cursor = 'pointer'
       })
 
-      map.on('mouseleave', 'schools', (e) => {
         map.getCanvas().style.cursor = ''
       })
-    });
-  }
 
-  displayLayerHandler(e) {
-    // layer name should be stored in element's value property
-    let layerName = e.target.getAttribute('value')
-    // will be 'visible' or 'none'
-    let currentState = e.target.checked ? 'visible' : 'none'
-
-    // Set layer visibility
-    this.state.map.setLayoutProperty(layerName, 'visibility', currentState)
   }
 
   changeRegionPaintPropertyHandler(e) {
