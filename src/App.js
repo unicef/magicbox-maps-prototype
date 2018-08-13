@@ -2,6 +2,7 @@ import React, { Component } from 'react';
 import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
 import config from './config'
+
 // Third-party React components
 import 'react-select/dist/react-select.css';
 import 'react-virtualized/styles.css';
@@ -16,6 +17,7 @@ import Legend from './components/legend';
 // Helpers
 import {calculate_index} from './helpers/helper-index-scores';
 import apiConfig from './helpers/api-config';
+
 // Main style
 import './css/App.css';
 // Map colors
@@ -52,7 +54,6 @@ class App extends Component {
       map.on('load', (e) => {
         resolve(map)
       })
-
       map.on('error', (e) => {
         reject(map)
       })
@@ -78,9 +79,9 @@ class App extends Component {
       return myJson
     })
 
+    // Make map respond when user zooms or moves it around
     map.on('move', () => {
       const { lng, lat } = map.getCenter();
-
       this.setState({
         lng: lng.toFixed(4),
         lat: lat.toFixed(4),
@@ -88,6 +89,7 @@ class App extends Component {
       });
     });
 
+    // Define map's properties when it is first loaded.
     map.on('load', function(e) {
       map.addLayer({
         id: 'regions',
@@ -117,6 +119,7 @@ class App extends Component {
         map.getCanvas().style.cursor = ''
       })
 
+    }.bind(this));
   }
 
   changeRegionPaintPropertyHandler(e) {
@@ -155,9 +158,11 @@ class App extends Component {
     let mainMap_class_name = config.login_required ? 'mainMap' : 'mainMap mainMap-noLogin'
     return (
       <div className="App">
+
         <div>
           <div ref={el => this.mapContainer = el} className={mainMap_class_name} />
         </div>
+
         <ControlPanel>
 
           <Section title="Region Threats">
@@ -181,7 +186,8 @@ class App extends Component {
           <p className="controlPanel__footerMessage">The selected items will be considered when calculating the risk level of schools and areas.</p>
 
         </ControlPanel>
-        <Legend from={mapColors.higher} to={mapColors.lower} steps={10} leftText="Most Risk" rightText="Least Risk" />
+
+        <Legend from={mapColors.higher} to={mapColors.lower} steps={10} leftText="More Risk" rightText="Less Risk" />
       </div>
     );
   }
