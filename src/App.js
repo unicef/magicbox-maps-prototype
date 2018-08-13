@@ -21,9 +21,9 @@ import './css/App.css';
 // Map colors
 const mapColors = {
   // higher color will be shown where indexes are 1
-  higher: '#0068EA',
+  higher: '#c21500', // strong red; prev: #0068EA - pure blue
   // lower color will be shown where indexes are 0
-  lower: '#DCDCDC'
+  lower: '#ffc500' // light orange; prev: #DCDCDC - very light gray
 }
 
 mapboxgl.accessToken = apiConfig.accessToken
