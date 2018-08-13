@@ -64,7 +64,17 @@ class App extends Component {
     })
 
     // Handle shapes data
-    shapesPromise.then(function(myJson) {
+    shapesPromise.then((myJson) => {
+      // Calculate indexes
+      myJson.features = calculate_index(
+        myJson.features, 'population', 'pop'
+      )
+      myJson.features = calculate_index(
+        myJson.features, 'threats', 'threats_index'
+      )
+      myJson.features = calculate_index(
+        myJson.features, 'violence', 'violence_index'
+      )
       return myJson
     })
 
@@ -99,9 +109,11 @@ class App extends Component {
       });
 
       // Change the cursor to a pointer
+      map.on('mouseenter', 'regions', (e) => {
         map.getCanvas().style.cursor = 'pointer'
       })
 
+      map.on('mouseleave', 'regions', (e) => {
         map.getCanvas().style.cursor = ''
       })
 
@@ -147,6 +159,27 @@ class App extends Component {
           <div ref={el => this.mapContainer = el} className={mainMap_class_name} />
         </div>
         <ControlPanel>
+
+          <Section title="Region Threats">
+            <InputGroup type="checkbox" name="region" group={[
+              { value: 'threats_index',
+                label: 'Natural Disasters Index' },
+              { value: 'violence_index',
+                label: 'Violence Index' }
+            ]} onChange={this.changeRegionPaintPropertyHandler.bind(this)} />
+          </Section>
+
+          <Section title="Region Vulnerabilities">
+            <InputGroup type="checkbox" name="region" group={[
+              { value: 'hdi',
+                label: 'Human Development Index (inverted)' },
+              { value: 'pop',
+                label: 'Population' }
+            ]} onChange={this.changeRegionPaintPropertyHandler.bind(this)} />
+          </Section>
+
+          <p className="controlPanel__footerMessage">The selected items will be considered when calculating the risk level of schools and areas.</p>
+
         </ControlPanel>
         <Legend from={mapColors.higher} to={mapColors.lower} steps={10} leftText="Most Risk" rightText="Least Risk" />
       </div>
