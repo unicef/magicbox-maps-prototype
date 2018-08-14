@@ -5,6 +5,7 @@ module.exports = {
   login_required: process.env.REACT_APP_LOGIN_REQUIRED || true,
   accepted_roles: ['admin', 'unicef'],
   app_name: 'Magicbox Maps',
+  opacity: 0.8,
   acceptable_percent: 80,
   map: {
     lng:  -74.2973,
@@ -20,6 +21,7 @@ module.exports = {
 //   login_required: process.env.REACT_APP_LOGIN_REQUIRED || false,
 //   accepted_roles: ['admin'],
 //   app_name: 'Magicbox Maps',
+//   opacity: 0.8,
 //   acceptable_percent: 60,
 //   map: {
 //     lng: 23.684203,

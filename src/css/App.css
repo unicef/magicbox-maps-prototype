@@ -93,8 +93,10 @@ body {
   display: block;
   font-size: 90%;
 }
+.radioGroup__element {
   display: block;
-  font-size: 90%;
+  font-size: 70%;
+  margin-left: .5rem;
 }
 .search {
   margin-bottom: 2rem;
