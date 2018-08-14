@@ -3,7 +3,7 @@ body {
 }
 .mainMap {
   position: absolute;
-  top: 45px;
+  top: 45px; /* leave space for the Logout bar */
   left: 0;
   right: 0;
   bottom: 0;
@@ -12,15 +12,11 @@ body {
   top: 0px;
 }
 
-.controlPanel-noLogin {
-  z-index: 1;
-  top:-10px;
-}
 .controlPanel {
   position: fixed;
   height: 100%;
   left: 0;
-  top:0px;
+  top: 0px;
   z-index: 2;
   background-color: #fff;
   width: 100%;
@@ -28,6 +24,10 @@ body {
   padding: 1rem;
   box-sizing: border-box;
   overflow-y: auto;
+}
+.controlPanel-noLogin {
+  z-index: 1;
+  top: -10px; /* for use when the Logout bar is not there */
 }
 
 .controlPanel, .legend {
@@ -93,7 +93,6 @@ body {
   display: block;
   font-size: 90%;
 }
-.radioGroup__element{
   display: block;
   font-size: 90%;
 }

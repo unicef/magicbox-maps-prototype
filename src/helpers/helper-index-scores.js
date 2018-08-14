@@ -14,7 +14,6 @@ export function calculate_index(features, source, destination) {
   return features
 }
 
-
 /**
  * Returns array of scores between 0 and 1
  * @param  {Array} ary

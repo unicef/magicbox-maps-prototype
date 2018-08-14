@@ -6,7 +6,6 @@
   height:50px;
   text-align: right;
 }
-
 .landing-screen-navbar-logo {
   position: absolute;
   left: 50px;
@@ -19,7 +18,6 @@
   height: 100px;
   color: #FFF;
 }
-
 .landing-screen-navbar {
   display: inline;
 }
@@ -30,7 +28,6 @@
   text-align: center;
   font-size: 14px;
 }
-
 .btn-login {
   background-color: #2785f7;
   color: #ffffff;
@@ -38,8 +35,6 @@
   display: inline;
   text-align: right
 }
-
-
 @media (min-width: 600px) {
   .landing-screen-info {
     text-align: center;

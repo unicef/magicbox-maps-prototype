@@ -1,5 +1,5 @@
 import React from 'react';
-import config from './config'
+import config from './config';
 import ReactDOM from 'react-dom';
 import {Route, Router} from 'react-router-dom';
 import './index.css';
@@ -43,7 +43,4 @@ if (config.login_required) {
   ReactDOM.render(<App />, document.getElementById('root'));
 }
 
-
 registerServiceWorker();
-
-
