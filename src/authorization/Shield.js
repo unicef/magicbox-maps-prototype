@@ -67,6 +67,13 @@ class Shield extends Component {
               </div>
             )
           }
+          {
+            isAuthenticated() && (
+              <div className="landing-screen-info">
+                Click <b><a href='/home'>here</a></b> to go to app
+              </div>
+            )
+          }
       </div>
     );
   }
