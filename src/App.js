@@ -389,6 +389,22 @@ class App extends Component {
     }.bind(this));
   }
 
+  changeMapPitch(e) {
+    // pitch should be stored in event
+    let pitch = e.target.value
+    //Set pitch with "ease" to smooth tranisition
+    this.state.map.easeTo({pitch: pitch})
+
+
+  }
+
+  changeMapBearing(e) {
+    // bearing should be stored in event
+    let bearing = e.target.value
+    //set bearing with "ease" to smooth tranisition
+    this.state.map.easeTo({bearing: bearing})
+  }
+
   displayLayerHandler(e) {
     // layer name should be stored in element's 'value' property
     let layerName = e.target.getAttribute('value')
@@ -410,6 +426,7 @@ class App extends Component {
       // no region selected
       return
     }
+
 
     // build the aggregation query
     let atts_to_aggregate =
@@ -454,6 +471,28 @@ class App extends Component {
                 label: 'Connectivity points',
                 onChange: this.displayLayerHandler.bind(this),
                 defaultChecked: 'checked'
+              }
+            ]} onChange={(e) => {}} />
+          </Section>
+          <Section title="Pitch">
+            <InputGroup type="range" name="school" group={[
+              { label: ' Map Pitch',
+                min: '0',
+                max: '60',
+                value: this.state.map.pitch,
+                onChange: this.changeMapPitch.bind(this),
+                step: '2'
+              }
+            ]} onChange={(e) => {}} />
+          </Section>
+          <Section title="Bearing">
+            <InputGroup type="range" name="school" group={[
+              { label: ' Map Bearing',
+                min: '0',
+                max: '180',
+                value: this.state.map.bearing,
+                onChange: this.changeMapBearing.bind(this),
+                step: '2'
               }
             ]} onChange={(e) => {}} />
           </Section>
