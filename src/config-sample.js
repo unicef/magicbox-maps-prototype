@@ -9,6 +9,8 @@ module.exports = {
   map: {
     lng: 23.684203,
     lat: -3.078111,
-    zoom: 5
+    zoom: 5,
+    pitch: 50,
+    bearing: 25
   }
 }

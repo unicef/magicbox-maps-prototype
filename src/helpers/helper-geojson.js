@@ -42,15 +42,11 @@ const helperGeojson = {
 
     let max = values_arr.reduce((a, b) => {
       return Math.max(a, b)
-    });
-
+    })
     // push the converted values into the geojson file
     geojson.features.forEach((f, i) => {
-      f.properties.outline_color = 'yellow'
-      f.properties.color= '#'+(Math.random()*0xFFFFFF<<0).toString(16);
-      f.properties.opacity= 0.6;
+      f.properties.opacity= 0.6
 
-      f.properties.base_height= 0
       // This is mobility
       let gradient_val = 0
       // This is activity (diagonal)
@@ -59,22 +55,28 @@ const helperGeojson = {
       } else {
         gradient_val = (4 * values_arr[i])/max || 0
       }
+
       f.properties.height= gradient_val * 1000
+
+
       let rgb = colors(gradient_val)
       let shade = rgb.substring(4, rgb.length-1).replace(/ /g, '').split(',').map(e => { return parseInt(e)})
+
       shade.push(config.opacity)
-      f.properties[value_type] = shade
+      f.properties.color = !gradient_val ? 'silver' : shade //gradient_val * 1000
       if (selected_admins) {
         if (selected_admins[f.properties.admin_id]) {
           // f.properties.outline_color = 'aqua'
-          f.properties[value_type] = [155,128,128, 0.3] //f.properties['activity_value']
+          f.properties.height= 0
+          f.properties.color = 'aqua' //f.properties['activity_value']
         }
       }
       //gray out admins that do not have any data
       if (no_data_admin_lookup[f.properties.admin_id]) {
-        f.properties[value_type] = [90,90,90,0.5]
+        f.properties.color = 'white'
+        f.properties.height = 0
       }
-
+      //console.log(f.properties.color)
     })
     //geojson.features = [geojson.features[0]]
     return geojson
