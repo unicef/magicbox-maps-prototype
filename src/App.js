@@ -58,9 +58,7 @@ class App extends Component {
     });
 
     this.setState({map});
-
     // Promises
-    let shapesPromise  = fetch(apiConfig.shapes).then((response) => response.json())
     let schoolsPromise = fetch(apiConfig.schools).then((response) => response.json())
     let mapLoadPromise = new Promise((resolve, reject) => {
       map.on('load', (e) => {
@@ -73,46 +71,23 @@ class App extends Component {
     })
 
     // Set data for regions when regions and map are available
-    Promise.all([shapesPromise, mapLoadPromise]).then(([geojson, map]) => {
-      map.getSource('regions').setData(geojson)
-    })
-
-    // Set data for schools when regions and map are available
-    Promise.all([schoolsPromise, mapLoadPromise]).then(([geojson, map]) => {
-      map.getSource('schools').setData(geojson)
-    })
-
-    // Handle shapes data
-    shapesPromise.then(function(myJson) {
-      return myJson
-    })
-
-    // Handle school data
-    schoolsPromise.then((geojson) => {
-    })
-
-    // When data arrives, process them in the background
-    // to build a list of names for the search component
-    Promise.all([schoolsPromise, shapesPromise]).then(([schoolsGeojson, shapesGeojson]) => {
-      return new Promise((resolve, reject) => {
-        let webWorker = new Worker('ww-process-names.js')
-
-        webWorker.onmessage = (event) => {
-          resolve(event.data)
-        }
-
-        webWorker.onerror = (err) => {
-          reject(err)
-        }
-
-        // send geojsons to worker
-        webWorker.postMessage([schoolsGeojson, shapesGeojson])
-      })
-    }).then((options) => {
-      this.setState({
-        options,
-        filter: createFilterOptions({options})
-      })
+    Promise.all([mapLoadPromise, schoolsPromise]).then(([map, schools]) => {
+      map.addLayer({
+        id: 'schools',
+        type: 'circle',
+        // Add a GeoJSON source containing place coordinates and information.
+        source: {
+          type: 'geojson',
+          data: schools
+        },
+        paint: {
+           'circle-radius': {
+             'base': 1.75,
+             'stops':[[12, 2], [22, 180]]
+           },
+           'circle-color': ['get', 'color']
+         }
+       });
     })
 
     map.on('move', () => {
@@ -126,45 +101,6 @@ class App extends Component {
     });
 
     map.on('load', function(e) {
-      map.addLayer({
-        id: 'regions',
-        type: 'fill',
-        // Add a GeoJSON source containing place coordinates and information.
-        source: {
-          type: 'geojson',
-          data: {
-            type: "FeatureCollection",
-            features: []
-          }
-        },
-        layout: {
-          visibility: 'none'
-        },
-        paint: {
-          'fill-opacity': 0.5
-        }
-      });
-
-      map.addLayer({
-        id: 'schools',
-        type: 'circle',
-        // Add a GeoJSON source containing place coordinates and information.
-        source: {
-          type: 'geojson',
-          data: {
-            type: "FeatureCollection",
-            features: []
-          }
-        },
-        paint: {
-          'circle-radius': {
-            'base': 1.75,
-            'stops':[[12, 2], [22, 180]]
-          },
-          'circle-color': ['get', 'color']
-        }
-      });
-
       // Add click event to schools layer
       map.on('click', 'schools', (e) => {
         let coordinates = e.features[0].geometry.coordinates.slice()
