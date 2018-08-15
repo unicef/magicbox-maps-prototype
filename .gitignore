@@ -1,8 +1,10 @@
+- check if your MB-prototype `.gitignore` file has the following:
+
 # See https://help.github.com/ignore-files/ for more about ignoring files.
-config.js
+
 # dependencies
 /node_modules
-geo_pop.json
+
 # testing
 /coverage
 
@@ -15,8 +17,15 @@ geo_pop.json
 .env.development.local
 .env.test.local
 .env.production.local
+/src/config.js
+package-lock.json
 
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
-./public/data/schools-connectivity.json
+
+# data
+/public/data/2018-07-11^685671-685671.json
+/public/data/cod_3.json
+/public/data/schools-drc.json # or anything related to schools or points
+/public/data/schools-connectivity.json# See https://help.github.com/ignore-files/ for more about ignoring files.
