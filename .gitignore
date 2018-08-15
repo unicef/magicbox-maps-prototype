@@ -1,5 +1,3 @@
-- check if your MB-prototype `.gitignore` file has the following:
-
 # See https://help.github.com/ignore-files/ for more about ignoring files.
 
 # dependencies
@@ -28,4 +26,4 @@ yarn-error.log*
 /public/data/2018-07-11^685671-685671.json
 /public/data/cod_3.json
 /public/data/schools-drc.json # or anything related to schools or points
-/public/data/schools-connectivity.json# See https://help.github.com/ignore-files/ for more about ignoring files.
+/public/data/schools-connectivity.json
