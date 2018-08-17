@@ -200,6 +200,11 @@ class App extends Component {
       // Add click event to update the Region layer when polygons are clicked
       map.on('click', 'regions', (e) => {
 
+        if (this.state.map.getLayoutProperty('schools', 'visibility') === 'visible') {
+          // don't take action on the Region layer if the School layer is being shown
+          return
+        }
+
         // clicked_admin is string
         let clicked_admin = e.features[0].properties.admin_id;
         let values = []
