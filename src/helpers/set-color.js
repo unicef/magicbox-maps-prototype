@@ -1,32 +1,23 @@
-function countConnectivity(schools) {
-  let numHigh = 0; // Above 3Mbps
-  let numLow = 0; // Below 3Mbps
-  let numNone = 0; // No connectivity
-  let numUnknown = 0;
+function setColor(schools){
 
   schools.forEach(school => {
     let speed_unit = school.properties["скорость"];
     let speed = speed_unit.match(/[+-]?\d+(\.\d+)?/g)
     let unit = speed_unit.replace(speed , "").trim()
     speed = parseFloat(speed);
+
     if ( unit !== "" && unit[0].match("М") && speed >= 3) {
-        numHigh++;
+        school.properties.color = "green";
     } else if ( (unit !== "" && unit[0].match("К") ) || (unit !== "" && unit[0].match("М") && speed < 3 && speed > 0) ) {
-        numLow++;
-    } else if (speed === 0) {
-        numNone++;
-    }
-    else if (isNaN(speed) ) {
-      numUnknown++;
+        school.properties.color = "orange";
+    } else if ( speed == 0) {
+        school.properties.color = "red";
+    } else if ( isNaN(speed) ){
+      school.properties.color = "purple";
     }
   });
 
-  return {
-    numHigh,
-    numLow,
-    numNone,
-    numUnknown
-  };
+  return schools;
 }
 
-export default countConnectivity;
+export default setColor;

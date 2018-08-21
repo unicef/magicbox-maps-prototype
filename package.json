@@ -3,10 +3,11 @@
   "version": "0.1.0",
   "private": true,
   "dependencies": {
+    "@mapbox/mapbox-gl-language": "^0.10.0",
     "chart.js": "^2.7.2",
     "color-convert": "^1.9.1",
     "husky": "^0.14.3",
-    "mapbox-gl": "^0.44.1",
+    "mapbox-gl": "^0.44.2",
     "react": "^16.2.0",
     "react-dom": "^16.2.0",
     "react-scripts": "1.1.1",

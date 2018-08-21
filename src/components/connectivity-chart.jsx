@@ -33,10 +33,10 @@ class ConnectivityChart extends Component {
         datasets: [{
           data: totals,
           backgroundColor: [
-            'rgb(92, 184, 92)',
-            'rgb(245, 166, 35)',
-            'rgb(217, 83, 79)',
-            'rgb(106, 30, 116)'
+            'green',
+            'orange',
+            'red',
+            'purple'
           ]
         }],
         labels: [

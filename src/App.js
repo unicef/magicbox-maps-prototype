@@ -18,9 +18,9 @@ import ConnectivityChart from './components/connectivity-chart';
 
 // Helpers
 import {calculate_index} from './helpers/helper-index-scores';
-import apiConfig from './helpers/api-config';
+import config from './config';
 import countConnectivity from './helpers/count-connectivity';
-
+import setColor from './helpers/set-color'
 // Main style
 import './App.css';
 // Map colors
@@ -31,17 +31,18 @@ const mapColors = {
   lower: '#DCDCDC'
 }
 
-mapboxgl.accessToken = apiConfig.accessToken
-console.log(mapboxgl.accessToken, 'token')
+const MapboxLanguage = require('@mapbox/mapbox-gl-language');
+
+mapboxgl.accessToken = config.accessToken
 
 class App extends Component {
   constructor(props: Props) {
     super(props);
     this.state = {
       map: {},
-      lng: 73.422503,
-      lat: 41.295678,
-      zoom: 6,
+      lng: 74.555223,
+      lat: 41.464025,
+      zoom: 5.5,
       connectivityTotals: null,
       options: [],
       searchValue: '',
@@ -51,19 +52,19 @@ class App extends Component {
   }
 
   componentDidMount() {
+    var language = new MapboxLanguage({ defaultLanguage : config.defaultLanguage });
     const map = new mapboxgl.Map({
       container: this.mapContainer,
       style: 'mapbox://styles/mapbox/bright-v9',
       center: [this.state.lng, this.state.lat],
       zoom: this.state.zoom
     });
+    map.addControl(language);
 
     this.setState({map});
-    console.log('***')
-    console.log(apiConfig);
-    // Promises
-    let shapesPromise  = fetch(apiConfig.shapes).then((response) => response.json())
-    let schoolsPromise = fetch(apiConfig.schools).then((response) => response.json())
+     // Promises
+    let shapesPromise  = fetch(config.population).then((response) => response.json())
+    let schoolsPromise = fetch(config.schools).then((response) => response.json())
     let mapLoadPromise = new Promise((resolve, reject) => {
       map.on('load', (e) => {
         resolve(map)
@@ -90,45 +91,15 @@ class App extends Component {
       myJson.features = calculate_index(
         myJson.features, 'sum', 'pop'
       )
-      // myJson.features = calculate_index(
-      //   myJson.features, 'threats', 'threats_index'
-      // )
-      // myJson.features = calculate_index(
-      //   myJson.features, 'violence', 'violence_index'
-      // )
 
       return myJson
-    })
+    });
 
-    // Handle school data
     schoolsPromise.then((geojson) => {
       this.setState({
         connectivityTotals: countConnectivity(geojson.features)
       })
-    })
-
-    // When data arrives, process them in the background
-    // to build a list of names for the search component
-    Promise.all([schoolsPromise, shapesPromise]).then(([schoolsGeojson, shapesGeojson]) => {
-      return new Promise((resolve, reject) => {
-        let webWorker = new Worker('ww-process-names.js')
-
-        webWorker.onmessage = (event) => {
-          resolve(event.data)
-        }
-
-        webWorker.onerror = (err) => {
-          reject(err)
-        }
-
-        // send geojsons to worker
-        webWorker.postMessage([schoolsGeojson, shapesGeojson])
-      })
-    }).then((options) => {
-      this.setState({
-        options,
-        filter: createFilterOptions({options})
-      })
+      setColor(geojson.features)
     })
 
     map.on('move', () => {
@@ -186,6 +157,7 @@ class App extends Component {
         let coordinates = e.features[0].geometry.coordinates.slice()
         let schoolProperties = e.features[0].properties
 
+
         // output all properties besides color
         let html = Object.keys(schoolProperties)
           .filter((key) => key !== 'color')
@@ -196,7 +168,7 @@ class App extends Component {
         new mapboxgl.Popup().setLngLat(coordinates).setHTML(html).addTo(map)
       })
 
-      // Change the cursor to a pointer
+      //Change the cursor to a pointer
       map.on('mouseenter', 'schools', (e) => {
         map.getCanvas().style.cursor = 'pointer'
       })
@@ -212,7 +184,6 @@ class App extends Component {
     let layerName = e.target.getAttribute('value')
     // will be 'visible' or 'none'
     let currentState = e.target.checked ? 'visible' : 'none'
-
     // Set layer visibility
     this.state.map.setLayoutProperty(layerName, 'visibility', currentState)
   }
@@ -233,20 +204,19 @@ class App extends Component {
     let atts_to_aggregate = Array.prototype.slice.call(matches).reduce((a,t) => {
       a.push(['get', t.value])
       return a
-    }, ['+'])
+    }, ['+']);
 
     // Set new paint property to color the map
     this.state.map.setPaintProperty(
       'regions',
       'fill-color',
-      // linear interpolation for colors going from lowerColor to higherColor accordingly to aggregation value
       ['interpolate',
         ['linear'],
         ['/', atts_to_aggregate, atts_to_aggregate.length-1],
         0, mapColors.lower,
         1, mapColors.higher
       ]
-    )
+    );
   }
 
   render() {
@@ -256,72 +226,16 @@ class App extends Component {
           <div ref={el => this.mapContainer = el} className="mainMap" />
         </div>
         <ControlPanel>
-<br/>
-<br/>
-<Section title="Region vulnerabilities">
-  <InputGroup type="checkbox" name="region" group={[
-    { value: 'pop',
-      label: 'Population' }
-  ]} onChange={this.changeRegionPaintPropertyHandler.bind(this)} />
-</Section>
-{/*
-          <Select name="search" placeholder="School or municipality" multi={true} className="search" value={this.state.searchValue} onChange={(selectedOption) => {
-            let regionFilter = null
-            let schoolFilter = null
-
-            // Set current state
-            this.setState({searchValue: selectedOption})
-
-            if (selectedOption.length) {
-              // Create filter for regions to look into all 'NOMBRE's
-              regionFilter = ['any'].concat(...selectedOption.map((input) => {
-                  return [
-                    ['==', ['get', 'NOMBRE_C'], input.value],
-                    ['==', ['get', 'NOMBRE_D'], input.value],
-                    ['==', ['get', 'NOMBRE_M'], input.value]
-                  ]
-                }))
-
-              // Create filter for schools to look into every 'name'
-              schoolFilter = ['any'].concat(selectedOption.map((input) => {
-                return ['==', ['get', 'name'], input.value]
-              }))
-            }
-
-            // Set filters
-            this.state.map.setFilter('regions', regionFilter)
-            this.state.map.setFilter('schools', schoolFilter)
-          }} filterOptions={this.state.filter} options={this.state.options} arrowRenderer={() => <i className="fas fa-search" />} />
-
-          <Section title="Region threats">
+          <Section title="Region vulnerabilities">
             <InputGroup type="checkbox" name="region" group={[
-              { value: 'threats_index',
-                label: 'Natural Disasters Index' },
-              { value: 'violence_index',
-                label: 'Violence Index' }
+              { value: 'pop',
+                label: 'Population' }
             ]} onChange={this.changeRegionPaintPropertyHandler.bind(this)} />
           </Section>
-
-
-          <Section title="School Capabilities">
-            <InputGroup type="checkbox" name="school" group={[
-              { value: 'schools',
-                label: 'Connectivity',
-                onChange: this.displayLayerHandler.bind(this),
-                defaultChecked: 'checked'
-              }
-            ]} onChange={(e) => {}} />
-          </Section>
-
-          <p className="controlPanel__footerMessage">The selected items will be considered when calculating the risk level of schools and areas.</p>
-*/}
           <Section title="Connectivity Details">
             <ConnectivityChart totals={this.state.connectivityTotals}></ConnectivityChart>
           </Section>
         </ControlPanel>
-{/*
-        <Legend from={mapColors.higher} to={mapColors.lower} steps={10} leftText="Most Risk" rightText="Least Risk" />
-*/}
       </div>
     );
   }

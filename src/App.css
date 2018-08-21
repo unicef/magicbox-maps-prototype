@@ -9,6 +9,37 @@ body {
   bottom: 0;
 }
 
+.mapboxgl-popup-content {
+overflow-y: scroll;
+height: 300px;
+}
+
+.mapboxgl-popup-anchor-left {
+    margin-left: 10px;
+}
+
+.mapboxgl-popup-anchor-right {
+    margin-left: -10px;
+}
+
+::-webkit-scrollbar {
+    width: 2px;
+}
+
+::-webkit-scrollbar-track {
+    background: #d3d3d3;
+}
+
+/* Handle */
+::-webkit-scrollbar-thumb {
+    background: #888;
+}
+
+/* Handle on hover */
+::-webkit-scrollbar-thumb:hover {
+    background: #555;
+}
+
 .controlPanel {
   position: fixed;
   height: 100%;
