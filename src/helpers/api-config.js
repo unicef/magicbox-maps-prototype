@@ -5,6 +5,7 @@ const apiConfig = {
   schools: process.env.REACT_APP_SCHOOLS_URL,
   shapes: process.env.REACT_APP_SHAPES_URL,
   accessToken: process.env.REACT_APP_MAPBOX_TOKEN
+  
 }
 
 export default apiConfig;
