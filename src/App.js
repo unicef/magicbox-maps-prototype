@@ -9,19 +9,20 @@ import 'react-virtualized/styles.css';
 import 'react-virtualized-select/styles.css';
 
 // Custom React components
+import ConnectivityChart from './components/connectivity-chart';
 import ControlPanel from './components/control-panel';
-import Section from './components/section';
+import Legend from './components/legend';
 import InputGroup from './components/input-group';
 import RadioGroup from './components/radio-group';
-import Legend from './components/legend';
-import ConnectivityChart from './components/connectivity-chart';
+import Section from './components/section';
 
 // Helpers
 import apiConfig from './helpers/api-config';
 import countConnectivity from './helpers/count-connectivity';
-import helperMatrix from './helpers/helper-matrix';
 import helperGeojson from './helpers/helper-geojson';
 import helperMap from './helpers/helper-map';
+import helperMatrix from './helpers/helper-matrix';
+
 
 // Main style
 import './css/App.css';
