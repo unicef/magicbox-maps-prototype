@@ -42,11 +42,6 @@ const helperGeojson = {
 
     // push the converted values into the geojson file
     geojson.features.forEach((f, i) => {
-
-      // first, color the "border" of the polygons
-      f.properties.outline_color = '#3c2800' // very dark orange (brown tone)
-
-      // then, color the metric of interest (could be activity, mobility, or anything that is specified by "value_type")
       let gradient_val = 0
       if (values_arr[i] >= max/4) {
         gradient_val = values_arr[i]/max || 0

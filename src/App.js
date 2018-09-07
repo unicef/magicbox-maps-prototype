@@ -32,7 +32,8 @@ const mapColors = {
   // higher color will be shown where indexes are 1
   higher: '#c21500', // strong red; prev: #0068EA - pure blue
   // lower color will be shown where indexes are 0
-  lower: '#ffc500' // light orange; prev: #DCDCDC - very light gray
+  lower: '#ffc500', // light orange; prev: #DCDCDC - very light gray
+  polygon_outline: '#3c2800' // very dark orange (brown tone) - border of the polygons
 }
 
 mapboxgl.accessToken = apiConfig.accessToken
@@ -121,11 +122,6 @@ class App extends Component {
       //   'fill-color',
       //   ['get', 'activity_value']
       // )
-      // this.state.map.setPaintProperty(
-      //   'regions',
-      //   'fill-outline-color',
-      //   ['get', 'outline_color']
-      // )
     })
 
     // Set data for vulnerabilities when regions and map are available
@@ -194,6 +190,7 @@ class App extends Component {
         },
         paint: {
           'fill-opacity': config.opacity,
+          'fill-outline-color': mapColors.polygon_outline
         }
       });
 
@@ -213,6 +210,7 @@ class App extends Component {
         },
         paint: {
           'fill-opacity': config.opacity,
+          'fill-outline-color': mapColors.polygon_outline
         }
       });
 
@@ -283,13 +281,6 @@ class App extends Component {
           'fill-color',
           ['get', value_to_paint_by]
         )
-
-        // Only uncomment this block if updating mobility also updates the outline color of the polygons in addition to their fill color
-        // this.state.map.setPaintProperty(
-        //   'regions',
-        //   'fill-outline-color',
-        //   ['get', 'outline_color']
-        // )
       })
 
       // Add click event to schools layer
@@ -379,11 +370,6 @@ class App extends Component {
       'mobility',
       'fill-color',
       aggregation_query
-    )
-    this.state.map.setPaintProperty(
-      'regions',
-      'fill-outline-color',
-      ['get', 'outline_color']
     )
   }
 
