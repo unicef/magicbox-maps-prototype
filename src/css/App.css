@@ -87,14 +87,14 @@ body {
 .section__header {
   color: #636363;
   font-size: 100%;
-  margin: 0;
+  margin-bottom: .5rem;
 }
 .checkboxGroup__element {
   display: block;
   font-size: 90%;
 }
 .radioGroup__element {
-  display: block;
+  display: inline-table;
   font-size: 70%;
   margin-left: .5rem;
 }
