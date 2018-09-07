@@ -18,6 +18,7 @@ import Section from './components/section';
 
 // Helpers
 import apiConfig from './helpers/api-config';
+import {calculate_index} from './helpers/helper-index-scores';
 import countConnectivity from './helpers/count-connectivity';
 import helperGeojson from './helpers/helper-geojson';
 import helperMap from './helpers/helper-map';
@@ -77,7 +78,7 @@ class App extends Component {
       })
     })
 
-    // Set data for regions when regions and map are available
+    // Set data for mobility when regions, mobility and map are available
     Promise.all([
       shapesPromise,
       mapLoadPromise,
@@ -112,11 +113,11 @@ class App extends Component {
         mobility_alldays: mobility_alldays
       });
 
-      map.getSource('regions').setData(geojson)
+      map.getSource('mobility').setData(geojson)
 
       // Only uncomment the following lines if want to visualize Acitivity as soon as the app loads
       // this.state.map.setPaintProperty(
-      //   'regions',
+      //   'mobility',
       //   'fill-color',
       //   ['get', 'activity_value']
       // )
@@ -127,6 +128,10 @@ class App extends Component {
       // )
     })
 
+    // Set data for vulnerabilities when regions and map are available
+    Promise.all([shapesPromise, mapLoadPromise]).then(([geojson, map]) => {
+      map.getSource('vulnerabilities').setData(geojson)
+    })
 
     // Set data for schools when schools and map are available
     Promise.all([schoolsPromise, mapLoadPromise]).then(([geojson, map]) => {
@@ -135,6 +140,17 @@ class App extends Component {
 
     // Handle shapes data if any
     shapesPromise.then((myJson) => {
+      // Calculate indexes for the vulnerabilities metrics
+      myJson.features = calculate_index(
+        myJson.features, 'population', 'pop'
+      )
+      myJson.features = calculate_index(
+        myJson.features, 'threats', 'threats_index'
+      )
+      myJson.features = calculate_index(
+        myJson.features, 'violence', 'violence_index'
+      )
+      return myJson
     })
 
     // Handle school data if any
@@ -157,12 +173,13 @@ class App extends Component {
     /*
     Define map's properties when it's first loaded.
     This includes:
-    - Adding 2 layers: 'regions' (for socio-econ metrics) & 'schools' (for school info & connectivity)
-    - Defining 'click' events for these 2 layers
+    - Adding 3 layers: 'mobility', 'vulnerabilities' & 'schools'
+    - Defining 'click' events for the layers where applicable
     */
     map.on('load', function(e) {
+
       map.addLayer({
-        id: 'regions',
+        id: 'mobility',
         type: 'fill',
         // Add a GeoJSON source containing place coordinates and information.
         source: {
@@ -175,6 +192,28 @@ class App extends Component {
         layout: {
           visibility: 'none'
         },
+        paint: {
+          'fill-opacity': config.opacity,
+        }
+      });
+
+      map.addLayer({
+        id: 'vulnerabilities',
+        type: 'fill',
+        // Add a GeoJSON source containing place coordinates and information.
+        source: {
+          type: 'geojson',
+          data: {
+            type: "FeatureCollection",
+            features: []
+          }
+        },
+        layout: {
+          visibility: 'none'
+        },
+        paint: {
+          'fill-opacity': config.opacity,
+        }
       });
 
       map.addLayer({
@@ -197,11 +236,11 @@ class App extends Component {
         }
       });
 
-      // Add click event to update the Region layer when polygons are clicked
-      map.on('click', 'regions', (e) => {
+      // Add click event to update the mobility layer when polygons are clicked
+      map.on('click', 'mobility', (e) => {
 
         if (this.state.map.getLayoutProperty('schools', 'visibility') === 'visible') {
-          // don't take action on the Region layer if the School layer is being shown
+          // don't take action on the mobility layer if the school layer is being shown
           return
         }
 
@@ -237,10 +276,10 @@ class App extends Component {
           )
         })
         // tell Map to update its data source
-        this.state.map.getSource('regions').setData(this.state.geojson)
+        this.state.map.getSource('mobility').setData(this.state.geojson)
 
         this.state.map.setPaintProperty(
-          'regions',
+          'mobility',
           'fill-color',
           ['get', value_to_paint_by]
         )
@@ -269,11 +308,11 @@ class App extends Component {
       })
 
       // Change the cursor to a pointer
-      map.on('mouseenter', 'regions', (e) => {
+      map.on('mouseenter', 'mobility', (e) => {
         map.getCanvas().style.cursor = 'pointer'
       })
 
-      map.on('mouseleave', 'regions', (e) => {
+      map.on('mouseleave', 'mobility', (e) => {
         map.getCanvas().style.cursor = ''
       })
 
@@ -298,13 +337,14 @@ class App extends Component {
     this.state.map.setLayoutProperty(layerName, 'visibility', currentState)
   }
 
-  changeRegionPaintPropertyHandler(e) {
-    // Get all checked inputs for regions
-    let matches = document.querySelectorAll("input[name=region]:checked");
-    // Make 'regions' layer visible if there are matches
-    this.state.map.setLayoutProperty('regions', 'visibility', matches.length ? 'visible' : 'none')
+  changeMobilityPaintPropertyHandler(e) {
+    // Get the checked input for whether or not activity/mobility is selected
+    let matches = document.querySelectorAll("input[name=mobility]:checked");
 
-    // no socio-econ metric selected
+    // Make the mobility layer visible if there are matches
+    this.state.map.setLayoutProperty('mobility', 'visibility', matches.length ? 'visible' : 'none')
+
+    // if activity/mobility is not selected
     if (!matches.length) {
       // reset value of selected_admins, so that next time Daily Activity/Mobility is clicked, activity will be displayed rather than the mobility of the previously selected admins
       // also, none clicked means Daily Activity/Mobility is not clicked either, hence disabling day selection
@@ -312,8 +352,13 @@ class App extends Component {
         selected_admins: {},
         day_selectable: false
       })
+      // re-enable vulnerabilities metrics
+      document.getElementsByName('vulnerabilities').forEach(e => e.disabled = false)
       return
     }
+
+    // disable vulnerabilities metrics
+    document.getElementsByName('vulnerabilities').forEach(e => e.disabled = true)
 
     // build the aggregation query; at the same time check if day selection will be enabled or not
     let day_selectable = false
@@ -331,7 +376,7 @@ class App extends Component {
 
     // Set new paint property to color the map
     this.state.map.setPaintProperty(
-      'regions',
+      'mobility',
       'fill-color',
       aggregation_query
     )
@@ -381,13 +426,50 @@ class App extends Component {
     })
 
     // tell Map to update its data source
-    this.state.map.getSource('regions').setData(this.state.geojson)
+    this.state.map.getSource('mobility').setData(this.state.geojson)
 
     // set new paint property to color the map
     this.state.map.setPaintProperty(
-      'regions',
+      'mobiity',
       'fill-color',
       ['get', value_type]
+    )
+  }
+
+  changeVulnerabilitiesPaintPropertyHandler(e) {
+    // Get all checked inputs for vulnerabilities
+    let matches = document.querySelectorAll("input[name=vulnerabilities]:checked");
+
+    // Make the vulnerabilities layer visible if there are matches
+    this.state.map.setLayoutProperty('vulnerabilities', 'visibility', matches.length ? 'visible' : 'none')
+
+    // no vulnerabilities metrics selected
+    if (!matches.length) {
+      // re-enable mobility metric
+      document.getElementsByName('mobility').forEach(e => e.disabled = false)
+      return
+    }
+
+    // disable mobility metric
+    document.getElementsByName('mobility').forEach(e => e.disabled = true)
+
+    // build the aggregation query
+    let atts_to_aggregate = Array.prototype.slice.call(matches).reduce((a,t) => {
+      a.push(['get', t.value])
+      return a
+    }, ['+'])
+
+    // Set new paint property to color the map
+    this.state.map.setPaintProperty(
+      'vulnerabilities',
+      'fill-color',
+      // linear interpolation for colors going from lowerColor to higherColor accordingly to aggregation value
+      ['interpolate',
+        ['linear'],
+        ['/', atts_to_aggregate, atts_to_aggregate.length-1],
+        0, mapColors.lower,
+        1, mapColors.higher
+      ]
     )
   }
 
@@ -405,12 +487,12 @@ class App extends Component {
           <Section title="Region Mobility">
             <InputGroup
               type="checkbox"
-              name="region"
+              name="mobility"
               group={[
                 { value: 'activity_value',
                   label: 'Baseline Activity/Mobility Index'}
               ]}
-              onChange={this.changeRegionPaintPropertyHandler.bind(this)}
+              onChange={this.changeMobilityPaintPropertyHandler.bind(this)}
             />
             <RadioGroup
               disabled={!this.state.day_selectable}
@@ -437,6 +519,33 @@ class App extends Component {
             />
           </Section>
 
+          <Section title="Region Threats">
+            <InputGroup
+              type="checkbox"
+              name="vulnerabilities"
+              group={[
+                { value: 'threats_index',
+                  label: 'Natural Disasters Index' },
+                { value: 'violence_index',
+                  label: 'Violence Index' }
+              ]}
+              onChange={this.changeVulnerabilitiesPaintPropertyHandler.bind(this)}
+           />
+         </Section>
+
+          <Section title="Region Vulnerabilities">
+            <InputGroup
+              type="checkbox"
+              name="vulnerabilities"
+              group={[
+                { value: 'hdi',
+                  label: 'Human Development Index (inverted)' },
+                { value: 'pop',
+                  label: 'Population' }
+              ]} onChange={this.changeVulnerabilitiesPaintPropertyHandler.bind(this)}
+            />
+          </Section>
+
           <Section title="School Capabilities">
             <InputGroup type="checkbox" name="school" group={[
               { value: 'schools',
@@ -446,6 +555,8 @@ class App extends Component {
               }
             ]} onChange={(e) => {}} />
           </Section>
+
+          <p className="controlPanel__footerMessage">The selected items will be considered when calculating the risk level of schools and areas.</p>
 
           <Section title="Connectivity Details">
             <ConnectivityChart totals={this.state.connectivity_totals}></ConnectivityChart>
