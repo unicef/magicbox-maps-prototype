@@ -90,8 +90,7 @@ class App extends Component {
       mobilitySundayPromise])
     .then(([geojson, map, mobilityMon, mobilityTue, mobilityWed, mobilityThu, mobilityFri, mobilitySat, mobilitySun]) => {
       // GeoJon file is read line by line and all admin are assigned an index
-      // One potential problem: If geoJSON WCOLGEN02_ id are different from MOBILITY file admin
-      // Here WCOLGEN02_ for admin 2 is 0 and is col_0_44_2_santiblanko the first row in the CSV file
+      // here, h is the lookup table; f is each feature (which in this case is a polygon/a municipality region); i is the index of a given feature in the geojson
       let admin_index = geojson.features.reduce((h, f, i) => {
         h[f.properties.admin_id] = i;
         return h;
@@ -218,9 +217,6 @@ class App extends Component {
           this.state.selected_admins[clicked_admin] = 1
         }
 
-        // want to clean up code here
-        console.log('Start create vector')
-        // Start create vector
         // If there is at least 1 admin selected, use the combineVectors method to obtain the combined 'mobility' values.
         if (Object.keys(this.state.selected_admins).length > 0) {
           values = helperMatrix.combineVectors(
@@ -232,7 +228,6 @@ class App extends Component {
           values = this.state.diagonal
         }
 
-        console.log('Start update geojson')
         this.setState({
           geojson: helperGeojson.updateGeojsonWithConvertedValues(
             this.state.geojson,
@@ -241,17 +236,14 @@ class App extends Component {
             this.state.selected_admins
           )
         })
-        console.log('Start apply geojson to map')
         // tell Map to update its data source
         this.state.map.getSource('regions').setData(this.state.geojson)
 
-        console.log('Start update colors')
         this.state.map.setPaintProperty(
           'regions',
           'fill-color',
           ['get', value_to_paint_by]
         )
-        console.log('End')
 
         // Only uncomment this block if updating mobility also updates the outline color of the polygons in addition to their fill color
         // this.state.map.setPaintProperty(
@@ -359,7 +351,7 @@ class App extends Component {
       return
     }
 
-    // Since only 1 day can be selected at a time, we can point directly to that day
+    // Since only 1 day can be selected at a time, we can point directly to that day via index 0
     let day_selected = matches[0].value;
     let index = parseInt(day_selected.slice(3), 10); // day_selected has the format 'day0', 'day1', etc.
     let updatedMatrix =

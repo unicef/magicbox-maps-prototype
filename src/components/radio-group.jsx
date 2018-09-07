@@ -1,6 +1,6 @@
 import React from 'react'
 
- const InputGroup = (props) => {
+const InputGroup = (props) => {
   return (
     <div className="radioGroup">
       {
