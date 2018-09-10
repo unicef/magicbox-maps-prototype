@@ -23,7 +23,7 @@
     "build": "react-scripts build",
     "test": "./run-tests.sh",
     "eject": "react-scripts eject",
-    "precommit": "bash run-tests.sh"
+    "precommit": "./run-tests.sh"
   },
   "devDependencies": {
     "eslint": "^5.3.0",
