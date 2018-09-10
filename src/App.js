@@ -93,13 +93,13 @@ class App extends Component {
     .then(([geojson, map, mobilityMon, mobilityTue, mobilityWed, mobilityThu, mobilityFri, mobilitySat, mobilitySun]) => {
       // GeoJon file is read line by line and all admin are assigned an index
       // here, h is the lookup table; f is each feature (which in this case is a polygon/a municipality region); i is the index of a given feature in the geojson
+      console.log("shapes", geojson)
       let admin_index = geojson.features.reduce((h, f, i) => {
         h[f.properties.admin_id] = i;
         return h;
       }, {});
 
       let mobility_alldays = [mobilityMon, mobilityTue, mobilityWed, mobilityThu, mobilityFri, mobilitySat, mobilitySun]
-
       // initial fetch of mobility is set to Monday as default. Monday mobility has index 0 in the array of all mobility
       let matrix = helperMatrix.getMatrix(mobility_alldays[0], admin_index);
       let diagonal = helperMatrix.getDiagonal(matrix);
@@ -146,6 +146,7 @@ class App extends Component {
       myJson.features = calculate_index(
         myJson.features, 'violence', 'violence_index'
       )
+      console.log(myJson.features[0])
       return myJson
     })
 
@@ -513,7 +514,9 @@ class App extends Component {
                 { value: 'threats_index',
                   label: 'Natural Disasters Index' },
                 { value: 'violence_index',
-                  label: 'Violence Index' }
+                  label: 'Violence Index' },
+                { value: 'zika_risk',
+                    label: 'Zika Risk Index' }
               ]}
               onChange={this.changeVulnerabilitiesPaintPropertyHandler.bind(this)}
            />
