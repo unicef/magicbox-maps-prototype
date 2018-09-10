@@ -21,7 +21,12 @@
   "scripts": {
     "start": "react-scripts start",
     "build": "react-scripts build",
-    "test": "react-scripts test --env=jsdom",
-    "eject": "react-scripts eject"
+    "test": "./run-tests.sh",
+    "eject": "react-scripts eject",
+    "precommit": "./run-tests.sh"
+  },
+  "devDependencies": {
+    "eslint": "^5.3.0",
+    "eslint-config-google": "^0.9.1"
   }
 }
