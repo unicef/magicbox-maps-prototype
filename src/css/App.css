@@ -93,10 +93,18 @@ body {
   display: block;
   font-size: 90%;
 }
+.checkboxGroup__element input {
+  margin-right: 3px;
+}
 .radioGroup__element {
   display: inline-table;
   font-size: 70%;
-  margin-left: .5rem;
+}
+.radioGroup__element input {
+  margin-right: 3px;
+}
+label.radioGroup__element {
+  margin-right: 8px;
 }
 .search {
   margin-bottom: 2rem;
