@@ -105,19 +105,19 @@ export function setConnectivityColor(geojson) {
 
     school.properties.color_4G =
       school_4G === 'no data' ? purple :
-      school_4G === 0 ? red :  // zero coverage
       school_4G > avg4G ? green : // above average
-      yellow  // below average
+      school_4G > 0 ? yellow : // below average
+      red  // zero coverage
     school.properties.color_3G =
       school_3G === 'no data' ? purple :
-      school_3G === 0 ? red :  // zero coverage
       school_3G > avg3G ? green : // above average
-      yellow  // below average
+      school_3G > 0 ? yellow : // below average
+      red  // zero coverage
     school.properties.color_2G =
       school_2G === 'no data' ? purple :
-      school_2G === 0 ? red :  // zero coverage
       school_2G > avg2G ? green : // above average
-      yellow  // below average
+      school_2G > 0 ? yellow : // below average
+      red  // zero coverage
   });
 
   return geojson;

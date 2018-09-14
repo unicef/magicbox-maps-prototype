@@ -125,40 +125,35 @@ class App extends Component {
 
     // Set data for vulnerabilities when regions and map are available
     Promise.all([shapesPromise, mapLoadPromise]).then(([geojson, map]) => {
+      // Calculate indexes for the vulnerabilities metrics
+      geojson.features = calculate_index(
+        geojson.features, 'population', 'pop'
+      )
+      geojson.features = calculate_index(
+        geojson.features, 'threats', 'threats_index'
+      )
+      geojson.features = calculate_index(
+        geojson.features, 'violence', 'violence_index'
+      )
+
       map.getSource('vulnerabilities').setData(geojson)
     })
 
     // Set data for schools when schools and map are available
     Promise.all([schoolsPromise, mapLoadPromise]).then(([geojson, map]) => {
-      map.getSource('connectivity').setData(geojson)
-    })
-
-    // Handle shapes data if any
-    shapesPromise.then((myJson) => {
-      // Calculate indexes for the vulnerabilities metrics
-      myJson.features = calculate_index(
-        myJson.features, 'population', 'pop'
-      )
-      myJson.features = calculate_index(
-        myJson.features, 'threats', 'threats_index'
-      )
-      myJson.features = calculate_index(
-        myJson.features, 'violence', 'violence_index'
-      )
-      return myJson
-    })
-
-    // Handle school data if any
-    schoolsPromise.then((geojson) => {
+      // Set colors on-the-fly for all kinds of connectivity
       setConnectivityColor(geojson)
+
       // Default connectivity to show is connectivityM
       this.setState({
         schools: geojson,
         connectivity_totals: getConnectivityTotals(geojson.features, 'M'),
         pie_labels: setChartLabels('M')
       })
-    })
 
+      map.getSource('connectivity').setData(geojson)
+    })
+    
     // Make map respond when user zooms or moves it around
     map.on('move', () => {
       const { lng, lat } = map.getCenter();
@@ -462,7 +457,7 @@ class App extends Component {
 
     // show the gradient legend bar
     this.setState({ legend_shown: true })
-    
+
     // disable mobility metric
     document.getElementsByName('mobility').forEach(e => e.disabled = true)
 
