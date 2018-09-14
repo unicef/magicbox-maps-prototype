@@ -10,7 +10,6 @@ const helperMap = {
       geojson: {},
       mobility_alldays: [],
       selected_admins: {},
-      day_selectable: false
     };
   }
 }

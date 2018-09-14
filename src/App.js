@@ -337,11 +337,9 @@ class App extends Component {
     // if activity/mobility is not selected
     if (!matches.length) {
       // reset value of selected_admins, so that next time Daily Activity/Mobility is clicked, activity will be displayed rather than the mobility of the previously selected admins
+      this.setState({ selected_admins: {} })
       // also, none clicked means Daily Activity/Mobility is not clicked either, hence disabling day selection
-      this.setState({
-        selected_admins: {},
-        day_selectable: false
-      })
+      document.getElementsByName('day').forEach(e => e.disabled = true)
       // re-enable vulnerabilities metrics
       document.getElementsByName('vulnerabilities').forEach(e => e.disabled = false)
       return
@@ -351,18 +349,15 @@ class App extends Component {
     document.getElementsByName('vulnerabilities').forEach(e => e.disabled = true)
 
     // build the aggregation query; at the same time check if day selection will be enabled or not
-    let day_selectable = false
     let aggregation_query =
       Array.prototype.slice.call(matches).reduce((q,t) => {
         // if Daily Activity/Mobility is checked, user can now select day
         if (t.value === 'activity_value') {
-          day_selectable = true
+          document.getElementsByName('day').forEach(e => e.disabled = false)
         }
         q.push(t.value)
         return q
       }, ['get'])
-
-    this.setState({ day_selectable: day_selectable  })
 
     // Set new paint property to color the map
     this.state.map.setPaintProperty(
@@ -480,7 +475,7 @@ class App extends Component {
               onChange={this.changeMobilityPaintPropertyHandler.bind(this)}
             />
             <RadioGroup
-              disabled={!this.state.day_selectable}
+              disabled // because by default Activity/Mobility is not checked
               type="radio"
               name="day"
               group={[
