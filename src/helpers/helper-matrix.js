@@ -27,6 +27,7 @@ const helperMatrix = {
     }, []);
     return mmm
   },
+  
   /**
    * Combines all vectors for clicked admins
    * @param  {Object} admin_index

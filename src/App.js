@@ -1,7 +1,7 @@
-import React, { Component } from 'react';
-import mapboxgl from 'mapbox-gl';
-import 'mapbox-gl/dist/mapbox-gl.css';
 import config from './config';
+import 'mapbox-gl/dist/mapbox-gl.css';
+import mapboxgl from 'mapbox-gl';
+import React, { Component } from 'react';
 
 // Third-party React components
 import 'react-select/dist/react-select.css';
@@ -18,8 +18,8 @@ import Section from './components/section';
 
 // Helpers
 import apiConfig from './helpers/api-config';
-import {calculate_index} from './helpers/helper-index-scores';
 import countConnectivity from './helpers/count-connectivity';
+import { calculate_index } from './helpers/helper-index-scores';
 import helperGeojson from './helpers/helper-geojson';
 import helperMap from './helpers/helper-map';
 import helperMatrix from './helpers/helper-matrix';
@@ -323,7 +323,6 @@ class App extends Component {
     let layerName = e.target.getAttribute('value')
     // will be 'visible' or 'none'
     let currentState = e.target.checked ? 'visible' : 'none'
-
     // Set layer visibility
     this.state.map.setLayoutProperty(layerName, 'visibility', currentState)
   }
@@ -375,15 +374,7 @@ class App extends Component {
 
   changeDayPaintPropertyHandler(e) {
     // Get the checked input for which day of the week is selected
-    let matches = document.querySelectorAll("input[name=day]:checked");
-
-    if (!matches.length) {
-      // no day selected
-      return
-    }
-
-    // Since only 1 day can be selected at a time, we can point directly to that day via index 0
-    let day_selected = matches[0].value;
+    let day_selected = e.target.getAttribute('value')
     let index = parseInt(day_selected.slice(3), 10); // day_selected has the format 'day0', 'day1', etc.
     let updatedMatrix =
       helperMatrix.getMatrix(this.state.mobility_alldays[index], this.state.admin_index);
@@ -414,7 +405,7 @@ class App extends Component {
     // tell Map to update its data source
     this.state.map.getSource('mobility').setData(this.state.geojson)
 
-    // set new paint property to color the map
+    // Set new paint property to color the map
     this.state.map.setPaintProperty(
       'mobiity',
       'fill-color',
@@ -461,6 +452,14 @@ class App extends Component {
 
   render() {
     let mainMap_class_name = config.login_required ? 'mainMap' : 'mainMap mainMap-noLogin'
+
+    let noteMessage =
+      <p className="controlPanel__footerMessage">The selected items will be considered when calculating the risk level of schools and areas.</p>
+
+    // Legend is by default hidden because we don't show the polygon layers first thing when the app loads
+    let gradientLegend =
+      <Legend from={mapColors.lower} to={mapColors.higher} steps={10} leftText="Less" rightText="More"/>
+
     return (
       <div className="App">
 
@@ -542,7 +541,7 @@ class App extends Component {
             ]} onChange={(e) => {}} />
           </Section>
 
-          <p className="controlPanel__footerMessage">The selected items will be considered when calculating the risk level of schools and areas.</p>
+          {noteMessage}
 
           <Section title="Connectivity Details">
             <ConnectivityChart totals={this.state.connectivity_totals}></ConnectivityChart>
@@ -550,7 +549,7 @@ class App extends Component {
 
         </ControlPanel>
 
-        <Legend from={mapColors.lower} to={mapColors.higher} steps={10} leftText="Less" rightText="More"/>
+        {gradientLegend}
       </div>
     );
   }

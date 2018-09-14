@@ -1,5 +1,5 @@
-import { interpolateRgb } from 'd3-interpolate'
 import config from '../config'
+import { interpolateRgb } from 'd3-interpolate'
 
 const helperGeojson = {
   format_regions_for_select: function(geojson) {

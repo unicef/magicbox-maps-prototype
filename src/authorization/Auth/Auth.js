@@ -44,7 +44,6 @@ export default class Auth {
    */
   handleAuthentication() {
     this.auth0.parseHash((err, authResult) => {
-      console.log(err)
       if (err) {
         // User is likely not yet authorized
         alert('Please confirm your email address and log in again.')
