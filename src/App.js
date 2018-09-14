@@ -114,11 +114,11 @@ class App extends Component {
         mobility_alldays: mobility_alldays
       });
 
-      map.getSource('mobility').setData(geojson)
+      map.getSource('baseline').setData(geojson)
 
       // Only uncomment the following lines if want to visualize Acitivity as soon as the app loads
       // this.state.map.setPaintProperty(
-      //   'mobility',
+      //   'baseline',
       //   'fill-color',
       //   ['get', 'activity_value']
       // )
@@ -131,7 +131,7 @@ class App extends Component {
 
     // Set data for schools when schools and map are available
     Promise.all([schoolsPromise, mapLoadPromise]).then(([geojson, map]) => {
-      map.getSource('schools').setData(geojson)
+      map.getSource('connectivity').setData(geojson)
     })
 
     // Handle shapes data if any
@@ -169,13 +169,13 @@ class App extends Component {
     /*
     Define map's properties when it's first loaded.
     This includes:
-    - Adding 3 layers: 'mobility', 'vulnerabilities' & 'schools'
+    - Adding 3 layers: 'baseline', 'vulnerabilities' & 'connectivity'
     - Defining 'click' events for the layers where applicable
     */
     map.on('load', function(e) {
 
       map.addLayer({
-        id: 'mobility',
+        id: 'baseline',
         type: 'fill',
         // Add a GeoJSON source containing place coordinates and information.
         source: {
@@ -215,7 +215,7 @@ class App extends Component {
       });
 
       map.addLayer({
-        id: 'schools',
+        id: 'connectivity',
         type: 'circle',
         // Add a GeoJSON source containing place coordinates and information.
         source: {
@@ -234,11 +234,11 @@ class App extends Component {
         }
       });
 
-      // Add click event to update the mobility layer when polygons are clicked
-      map.on('click', 'mobility', (e) => {
+      // Add click event to update the baseline mobility layer when polygons are clicked
+      map.on('click', 'baseline', (e) => {
 
-        if (this.state.map.getLayoutProperty('schools', 'visibility') === 'visible') {
-          // don't take action on the mobility layer if the school layer is being shown
+        if (this.state.map.getLayoutProperty('connectivity', 'visibility') === 'visible') {
+          // don't take action on the baseline layer if the school layer is being shown
           return
         }
 
@@ -274,17 +274,17 @@ class App extends Component {
           )
         })
         // tell Map to update its data source
-        this.state.map.getSource('mobility').setData(this.state.geojson)
+        this.state.map.getSource('baseline').setData(this.state.geojson)
 
         this.state.map.setPaintProperty(
-          'mobility',
+          'baseline',
           'fill-color',
           ['get', value_to_paint_by]
         )
       })
 
-      // Add click event to schools layer
-      map.on('click', 'schools', (e) => {
+      // Add click event to connectivity layer
+      map.on('click', 'connectivity', (e) => {
         let coordinates = e.features[0].geometry.coordinates.slice()
         let schoolProperties = e.features[0].properties
 
@@ -299,19 +299,19 @@ class App extends Component {
       })
 
       // Change the cursor to a pointer
-      map.on('mouseenter', 'mobility', (e) => {
+      map.on('mouseenter', 'baseline', (e) => {
         map.getCanvas().style.cursor = 'pointer'
       })
 
-      map.on('mouseleave', 'mobility', (e) => {
+      map.on('mouseleave', 'baseline', (e) => {
         map.getCanvas().style.cursor = ''
       })
 
-      map.on('mouseenter', 'schools', (e) => {
+      map.on('mouseenter', 'connectivity', (e) => {
         map.getCanvas().style.cursor = 'pointer'
       })
 
-      map.on('mouseleave', 'schools', (e) => {
+      map.on('mouseleave', 'connectivity', (e) => {
         map.getCanvas().style.cursor = ''
       })
 
@@ -332,7 +332,7 @@ class App extends Component {
     let matches = document.querySelectorAll("input[name=mobility]:checked");
 
     // Make the mobility layer visible if there are matches
-    this.state.map.setLayoutProperty('mobility', 'visibility', matches.length ? 'visible' : 'none')
+    this.state.map.setLayoutProperty('baseline', 'visibility', matches.length ? 'visible' : 'none')
 
     // if activity/mobility is not selected
     if (!matches.length) {
@@ -351,20 +351,18 @@ class App extends Component {
     // build the aggregation query; at the same time check if day selection will be enabled or not
     let aggregation_query =
       Array.prototype.slice.call(matches).reduce((q,t) => {
-        // if Daily Activity/Mobility is checked, user can now select day
-        if (t.value === 'activity_value') {
+        // if Baseline ACtivity/Mobility is checked, user can now select day
+        if (t.value === 'baseline') {
           document.getElementsByName('day').forEach(e => e.disabled = false)
+          q.push('activity_value')
+        } else {
+          q.push(t.value)
         }
-        q.push(t.value)
         return q
       }, ['get'])
 
     // Set new paint property to color the map
-    this.state.map.setPaintProperty(
-      'mobility',
-      'fill-color',
-      aggregation_query
-    )
+    this.state.map.setPaintProperty('baseline', 'fill-color', aggregation_query)
   }
 
   changeDayPaintPropertyHandler(e) {
@@ -398,7 +396,7 @@ class App extends Component {
     })
 
     // tell Map to update its data source
-    this.state.map.getSource('mobility').setData(this.state.geojson)
+    this.state.map.getSource('baseline').setData(this.state.geojson)
 
     // Set new paint property to color the map
     this.state.map.setPaintProperty(
@@ -469,7 +467,7 @@ class App extends Component {
               type="checkbox"
               name="mobility"
               group={[
-                { value: 'activity_value',
+                { value: 'baseline',
                   label: 'Baseline Activity/Mobility Index'}
               ]}
               onChange={this.changeMobilityPaintPropertyHandler.bind(this)}
@@ -527,8 +525,8 @@ class App extends Component {
           </Section>
 
           <Section title="School Capabilities">
-            <InputGroup type="checkbox" name="school" group={[
-              { value: 'schools',
+            <InputGroup type="checkbox" name="schools" group={[
+              { value: 'connectivity',
                 label: 'Connectivity',
                 onChange: this.displayLayerHandler.bind(this),
                 defaultChecked: 'checked'
