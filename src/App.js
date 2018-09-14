@@ -18,12 +18,11 @@ import Section from './components/section';
 
 // Helpers
 import apiConfig from './helpers/api-config';
-import countConnectivity from './helpers/count-connectivity';
 import { calculate_index } from './helpers/helper-index-scores';
 import helperGeojson from './helpers/helper-geojson';
 import helperMap from './helpers/helper-map';
 import helperMatrix from './helpers/helper-matrix';
-
+import { getConnectivityTotals, setChartLabels, setConnectivityColor } from './helpers/helper-connectivity';
 
 // Main style
 import './css/App.css';
@@ -151,8 +150,12 @@ class App extends Component {
 
     // Handle school data if any
     schoolsPromise.then((geojson) => {
+      setConnectivityColor(geojson)
+      // Default connectivity to show is connectivityM
       this.setState({
-        connectivity_totals: countConnectivity(geojson.features)
+        schools: geojson,
+        connectivity_totals: getConnectivityTotals(geojson.features, 'M'),
+        pie_labels: setChartLabels('M')
       })
     })
 
@@ -230,7 +233,7 @@ class App extends Component {
             'base': 1.75,
             'stops':[[12, 2], [22, 180]]
           },
-          'circle-color': ['get', 'color']
+          'circle-color': ['get', 'color'] // this generic "get color" is referring to the connectivityM
         }
       });
 
@@ -290,7 +293,7 @@ class App extends Component {
 
         // output all properties besides color
         let html = Object.keys(schoolProperties)
-          .filter((key) => key !== 'color')
+          .filter((key) => key !== 'color' && key !== 'color_4G' &&  key !== 'color_3G' &&  key !== 'color_2G')
           .reduce((acc, key) => {
           return acc + `<p><strong>${key}:</strong> ${schoolProperties[key]}</p>`
         }, '')
@@ -325,6 +328,33 @@ class App extends Component {
     let currentState = e.target.checked ? 'visible' : 'none'
     // Set layer visibility
     this.state.map.setLayoutProperty(layerName, 'visibility', currentState)
+
+    // disable the selection of connectivity type if this metric is not checked
+    if (layerName === 'connectivity') {
+      if (e.target.checked) {
+        document.getElementsByName('connectivity_type').forEach(e => e.disabled = false)
+      } else {
+        document.getElementsByName('connectivity_type').forEach(e => e.disabled = true)
+      }
+    }
+  }
+
+  changeConnectivityPaintPropertyHandler(e) {
+    let selectedType = e.target.getAttribute('value')
+    let value_to_paint_by =
+      selectedType === 'schools_m' ? 'color' :
+      'color' + selectedType.substr(-3) // because selectedType will be e.g. "schools_4G" and the corresponding value to get is "color_4G"
+
+    // Set new paint property to color the map
+    this.state.map.setPaintProperty('connectivity', 'circle-color', ['get', value_to_paint_by])
+
+    let type_to_display =
+      selectedType === 'schools_m' ? 'M' : selectedType.substr(-2) // type will be either M or the last two characters i.e. 4G / 3G / 2G
+    let schools = this.state.schools.features
+    this.setState({
+      connectivity_totals: getConnectivityTotals(schools, type_to_display),
+      pie_labels: setChartLabels(type_to_display)
+    })
   }
 
   changeMobilityPaintPropertyHandler(e) {
@@ -449,6 +479,14 @@ class App extends Component {
     let noteMessage =
       <p className="controlPanel__footerMessage">The selected items will be considered when calculating the risk level of schools and areas.</p>
 
+    let pieChart =
+      <Section title="Connectivity Details">
+        <ConnectivityChart
+          totals={this.state.connectivity_totals}
+          labels={this.state.pie_labels}
+        ></ConnectivityChart>
+      </Section>
+
     // Legend is by default hidden because we don't show the polygon layers first thing when the app loads
     let gradientLegend =
       <Legend from={mapColors.lower} to={mapColors.higher} steps={10} leftText="Less" rightText="More"/>
@@ -531,14 +569,32 @@ class App extends Component {
                 onChange: this.displayLayerHandler.bind(this),
                 defaultChecked: 'checked'
               }
+            ]} />
+            <RadioGroup type="radio" name="connectivity_type"
+              group={[
+                { value: 'schools_m',
+                  label: 'Internet Connectivity',
+                  onChange: this.changeConnectivityPaintPropertyHandler.bind(this),
+                  defaultChecked:'checked'
+                },
+                { value: 'schools_4G',
+                  label: '4G Coverage',
+                  onChange: this.changeConnectivityPaintPropertyHandler.bind(this),
+                },
+                { value: 'schools_3G',
+                  label: '3G Coverage',
+                  onChange: this.changeConnectivityPaintPropertyHandler.bind(this),
+                },
+                { value: 'schools_2G',
+                  label: '2G Coverage',
+                  onChange: this.changeConnectivityPaintPropertyHandler.bind(this),
+                }
             ]} onChange={(e) => {}} />
           </Section>
 
           {noteMessage}
 
-          <Section title="Connectivity Details">
-            <ConnectivityChart totals={this.state.connectivity_totals}></ConnectivityChart>
-          </Section>
+          {pieChart}
 
         </ControlPanel>
 

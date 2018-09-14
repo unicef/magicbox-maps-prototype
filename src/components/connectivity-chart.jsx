@@ -39,12 +39,7 @@ class ConnectivityChart extends Component {
             'rgb(106, 30, 116)'
           ]
         }],
-        labels: [
-          'Above 3Mbps',
-          'Below 3Mbps',
-          'Zero Connectivity',
-          'No Data'
-        ],
+        labels: this.props.labels,
       },
       options: {
         animation: {
@@ -61,6 +56,7 @@ class ConnectivityChart extends Component {
   updateChart() {
     let chart = this.state.chart;
     chart.data.datasets[0].data = this.formatTotals(this.props.totals);
+    chart.data.labels = this.props.labels;
     chart.update();
   }
 
