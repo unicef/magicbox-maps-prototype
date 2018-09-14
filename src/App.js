@@ -367,14 +367,20 @@ class App extends Component {
     // if activity/mobility is not selected
     if (!matches.length) {
       // reset value of selected_admins, so that next time Daily Activity/Mobility is clicked, activity will be displayed rather than the mobility of the previously selected admins
-      this.setState({ selected_admins: {} })
+      // also, hide the gradient legend bar
+      this.setState({ selected_admins: {}, legend_shown: false })
+
       // also, none clicked means Daily Activity/Mobility is not clicked either, hence disabling day selection
       document.getElementsByName('day').forEach(e => e.disabled = true)
+
       // re-enable vulnerabilities metrics
       document.getElementsByName('vulnerabilities').forEach(e => e.disabled = false)
+
       return
     }
 
+    // show the gradient legend bar
+    this.setState({ legend_shown: true })
     // disable vulnerabilities metrics
     document.getElementsByName('vulnerabilities').forEach(e => e.disabled = true)
 
@@ -445,11 +451,18 @@ class App extends Component {
 
     // no vulnerabilities metrics selected
     if (!matches.length) {
+      // hide the gradient legend bar
+      this.setState({ legend_shown: false })
+
       // re-enable mobility metric
       document.getElementsByName('mobility').forEach(e => e.disabled = false)
+
       return
     }
 
+    // show the gradient legend bar
+    this.setState({ legend_shown: true })
+    
     // disable mobility metric
     document.getElementsByName('mobility').forEach(e => e.disabled = true)
 
@@ -487,7 +500,6 @@ class App extends Component {
         ></ConnectivityChart>
       </Section>
 
-    // Legend is by default hidden because we don't show the polygon layers first thing when the app loads
     let gradientLegend =
       <Legend from={mapColors.lower} to={mapColors.higher} steps={10} leftText="Less" rightText="More"/>
 
@@ -600,7 +612,7 @@ class App extends Component {
 
         </ControlPanel>
 
-        {gradientLegend}
+        {this.state.legend_shown ? gradientLegend : null}
       </div>
     );
   }

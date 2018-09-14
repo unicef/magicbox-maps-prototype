@@ -12,6 +12,7 @@ const helperMap = {
       schools: {},
       mobility_alldays: [],
       selected_admins: {},
+      legend_shown: false // Legend is by default hidden because we don't show the polygon layers first thing when the app loads
     };
   }
 }
