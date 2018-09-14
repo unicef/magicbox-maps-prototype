@@ -73,6 +73,15 @@ export function setConnectivityColor(geojson) {
       sum2G = 0;
 
   geojson.features.forEach((school, index) => {
+    // Internet connectivity
+    let speed = school.properties.speed_connectivity
+    school.properties.color =
+      speed >= 3 ? green : // above 3Mbps
+      speed > 0 ? yellow : // below 3Mbps
+      speed === 0 ? red : // zero connectivity
+      purple
+
+    // 4G, 3G, 2G connectivity
     let school_4G = school.properties.connectivity4G,
         school_3G = school.properties.connectivity3G,
         school_2G = school.properties.connectivity2G;
