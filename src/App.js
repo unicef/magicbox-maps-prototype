@@ -543,7 +543,9 @@ class App extends Component {
                 { value: 'threats_index',
                   label: 'Natural Disasters Index' },
                 { value: 'violence_index',
-                  label: 'Violence Index' }
+                  label: 'Violence Index' },
+                { value: 'zika_risk',
+                  label: 'Zika Risk Index' }
               ]}
               onChange={this.changeVulnerabilitiesPaintPropertyHandler.bind(this)}
            />
