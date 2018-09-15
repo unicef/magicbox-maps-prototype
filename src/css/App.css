@@ -1,6 +1,16 @@
 body {
   color: #1f3349;
 }
+.mapboxgl-popup {
+  max-width: 300px;
+  max-height: 400px;
+  font: 12px/20px 'Open Sans', sans-serif;
+  border-radius: 5px;
+}
+.mapboxgl-popup-content {
+  overflow-y: scroll;
+  overflow-x: scroll;
+}
 .mainMap {
   position: absolute;
   top: 45px; /* leave space for the Logout bar */
