@@ -604,6 +604,11 @@ class App extends Component {
           {noteMessage}
 
           {pieChart}
+          <p className="controlPanel__footerMessage">
+            Coverage provided by <b>Facebook</b>.
+            <br/>
+            Baseline mobility provided by <b>Telefonica</b>
+          </p>
 
         </ControlPanel>
 
