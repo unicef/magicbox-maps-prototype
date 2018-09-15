@@ -34,7 +34,7 @@ const helperGeojson = {
   */
   updateGeojsonWithConvertedValues: function(geojson, values_arr, value_type, selected_admins) {
     console.log(selected_admins)
-    const colors = interpolateRgb('#ffc550', '#c21500') // light orange (less) & strong red (more)
+    const colors = interpolateRgb('#fff600', '#c21500') // cadmium yellow (less) & strong red (more)
 
     let max = values_arr.reduce(function(a, b) {
       return Math.max(a, b);
