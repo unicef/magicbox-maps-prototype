@@ -33,8 +33,8 @@ const helperGeojson = {
   Values passed in here will be converted to range 0:1. In addition, values in the lowest quarter will be buffed up by 4 times.
   */
   updateGeojsonWithConvertedValues: function(geojson, values_arr, value_type, selected_admins) {
-    console.log(selected_admins)
-    const colors = interpolateRgb('#fff600', '#c21500') // cadmium yellow (less) & strong red (more)
+    console.log(config)
+    const colors = interpolateRgb(config.map.colors.lower, config.map.colors.higher) // cadmium yellow (less) & strong red (more)
 
     let max = values_arr.reduce(function(a, b) {
       return Math.max(a, b);
@@ -56,7 +56,7 @@ const helperGeojson = {
       // color the inter admin(s) differently
       if (selected_admins) {
         if (selected_admins[f.properties.admin_id]) {
-          f.properties[value_type] = '#50ffc5' // light cyan - lime green
+          f.properties[value_type] = config.map.colors.selected // light cyan - lime green
         }
       }
     })
