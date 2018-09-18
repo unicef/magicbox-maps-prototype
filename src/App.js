@@ -30,9 +30,9 @@ import './css/App.css';
 // Map colors
 const mapColors = {
   // higher color will be shown where indexes are 1
-  higher: '#c21500', // strong red; prev: #0068EA - pure blue
+  higher: '#54278f', // strong red; prev: #0068EA - pure blue
   // lower color will be shown where indexes are 0
-  lower: '#ffc500', // light orange; prev: #DCDCDC - very light gray
+  lower: '#dadaeb', // light orange; prev: #DCDCDC - very light gray
   polygon_outline: '#3c2800' // very dark orange (brown tone) - border of the polygons
 }
 
