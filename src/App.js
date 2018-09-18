@@ -28,11 +28,9 @@ import { getConnectivityTotals, setChartLabels, setConnectivityColor } from './h
 import './css/App.css';
 // Map colors
 const mapColors = {
-  // higher color will be shown where indexes are 1
-  higher: '#c21500', // strong red; prev: #0068EA - pure blue
-  // lower color will be shown where indexes are 0
-  lower: '#fff600', // cadmium yellow; previous choices: #ffc500' - light orange, #DCDCDC - very light gray
-  polygon_outline: '#3c2800' // very dark orange (brown tone) - border of the polygons
+  higher: config.map.colors.higher,
+  lower: config.map.colors.lower,
+  polygon_outline: config.map.colors.polygon_outline
 }
 
 mapboxgl.accessToken = apiConfig.accessToken
