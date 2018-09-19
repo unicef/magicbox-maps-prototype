@@ -563,6 +563,8 @@ class App extends Component {
               group={[
                 { value: 'hdi',
                   label: 'Human Development Index (inverted)' },
+                  { value: 'hdi_estimated',
+                    label: 'HDI estimated' },
                 { value: 'pop',
                   label: 'Population' }
               ]} onChange={this.changeVulnerabilitiesPaintPropertyHandler.bind(this)}
