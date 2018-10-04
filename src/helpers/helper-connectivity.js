@@ -122,25 +122,3 @@ export function setConnectivityColor(geojson) {
 
   return geojson;
 }
-
-/**
- * The "median" is the "middle" value in a sorted list of numbers.
- *
- * @param {Array} arr An array of numbers.
- * @return {Number} The calculated median value from the specified numbers.
- * Source: https://jonlabelle.com/snippets/view/javascript/calculate-mean-median-mode-and-range-in-javascript
- */
-function median(arr) {
-    var median = 0, numsLen = arr.length;
-    arr.sort();
-
-    if (numsLen % 2 === 0) { // is even
-      // average of two middle numbers
-      median = (arr[numsLen / 2 - 1] + arr[numsLen / 2]) / 2;
-    } else { // is odd
-      // middle number only
-      median = arr[(numsLen - 1) / 2];
-    }
-
-    return median;
-}

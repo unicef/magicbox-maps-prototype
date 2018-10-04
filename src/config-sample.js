@@ -17,4 +17,10 @@ module.exports = {
       selected: '#ffff00 ',
       polygon_outline: '#3c2800'}
   }
+      higher: '#54278f', // dark purple
+      lower: '#dadaeb', // light bluish/purplish
+      selected: '#ffff00 ', // pure yellow
+      polygon_outline: '#3c2800' // very dark brown
+    }
+  },
 }
