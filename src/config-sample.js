@@ -12,11 +12,6 @@ module.exports = {
     lat: 4.5709,
     zoom: 5,
     colors: {
-      higher: '#54278f',
-      lower: '#dadaeb',
-      selected: '#ffff00 ',
-      polygon_outline: '#3c2800'}
-  }
       higher: '#54278f', // dark purple
       lower: '#dadaeb', // light bluish/purplish
       selected: '#ffff00 ', // pure yellow
