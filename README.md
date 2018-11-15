@@ -23,9 +23,10 @@ Get started:
 1. Fork the project to your GitHub account and clone it.
 2. Copy `.env.local.sample` to `.env.local`.
   - The school data included in this file is a small, "fake" data set for development use. To use the full data set (If you have permission to access it), change the `REACT_APP_SCHOOLS_URL` variable in .env.
-3. Run `npm install; npm start`.
-4. Pick an [issue](https://github.com/unicef/magicbox-maps-prototype/issues). To get more context about a requested feature, leave a comment in the issue, or come chat with us in our [gitter channel](https://gitter.im/unicef-innovation-dev/Lobby).
-5. Create feature branch. When done create pull request to development branch of this repository.
+3. Add your Mapbox access token to `.env.local`. If you don't have a token, you can create one for free on [mapbox.com](https://www.mapbox.com/).
+4. Run `npm install; npm start`.
+5. Pick an [issue](https://github.com/unicef/magicbox-maps-prototype/issues). To get more context about a requested feature, leave a comment in the issue, or come chat with us in our [gitter channel](https://gitter.im/unicef-innovation-dev/Lobby).
+6. Create feature branch. When done create pull request to development branch of this repository.
 
 [Here](https://github.com/unicef/magicbox/blob/master/.github/CONTRIBUTING.md) is a contribution guide to Magic Box repositories.
 
